@@ -15,6 +15,8 @@ public:
     std::uint8_t protocol;
     std::uint32_t priority;
     std::uint8_t useAll;
+    RE::TESForm* targetForm;
+    RE::TESForm* insertForm;
 
     bool operator<(const ItemData &other);
 

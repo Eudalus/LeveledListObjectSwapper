@@ -186,11 +186,14 @@ bool Manager::ProcessLeveledItem()
     const auto& lists = dataHandler->GetFormArray(RE::FormType::LeveledItem);
     const std::size_t MAX_ARRAY_SIZE = 256;
     const RE::BSTArrayBase::size_type numberOfLists = lists.size();
+
     RE::SimpleArray<RE::LEVELED_OBJECT>::size_type oldListSize, newListSize;
-    std::size_t currentItemsSize;
+    std::size_t currentItemsSize, insertItemsSize;
+    bool shouldInsert, ongoing;
+    
     std::vector<RE::LEVELED_OBJECT> insertItems;
     insertItems.reserve(MAX_ARRAY_SIZE);
-    bool shouldInsert;
+
     std::srand(std::time(NULL));
 
     // check list entries for batch inserts
@@ -198,14 +201,15 @@ bool Manager::ProcessLeveledItem()
     {
         RE::TESLevItem *currentList = lists[i] ? lists[i]->As<RE::TESLevItem>() : nullptr;
 
-        if (currentList)
+        if (currentList && (currentList->numEntries < MAX_ARRAY_SIZE))
         {
             shouldInsert = false;
+            ongoing = true;
 
             RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = currentList->entries;
             oldListSize = currentEntries.size();
 
-            for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type j = 0; j < oldListSize; ++j)
+            for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type j = 0; j < oldListSize && ongoing; ++j)
             {
                 auto currentForm = currentEntries[j].form;
 
@@ -220,33 +224,61 @@ bool Manager::ProcessLeveledItem()
                         if (currentItemsSize > 0)
                         {
                             shouldInsert = true;
+                            insertItemsSize = insertItems.size();
 
-                            for (size_t k = 0; k < currentItemsSize; ++k)
+                            for (size_t k = 0; k < currentItemsSize && ((insertItemsSize + oldListSize) < MAX_ARRAY_SIZE) && ongoing; ++k)
                             {
-                                insertItems.emplace_back(RE::LEVELED_OBJECT(
-                                    RE::TESForm::LookupByID(currentItems[k].insertFormID),
-                                    (rand() % (currentItems[k].maxCount - currentItems[k].minCount + 1)) + currentItems[k].minCount,
-                                    (rand() % (currentItems[k].maxLevel - currentItems[k].minLevel + 1)) + currentItems[k].minLevel,
-                                    0,
-                                    nullptr));
+                                auto insertForm = RE::TESForm::LookupByID(currentItems[k].insertFormID);
+
+                                if (insertForm && currentList->GetCanContainFormsOfType(insertForm->GetFormType()))
+                                {
+                                    // store pointer on ItemData to insert directly to reduce lookup?
+                                    insertItems.emplace_back(RE::LEVELED_OBJECT(insertForm, (rand() % (currentItems[k].maxCount - currentItems[k].minCount + 1)) + currentItems[k].minCount, (rand() % (currentItems[k].maxLevel - currentItems[k].minLevel + 1)) + currentItems[k].minLevel, 0, nullptr));
+                                    insertItemsSize = insertItems.size();
+                                    if (insertItemsSize + oldListSize >= MAX_ARRAY_SIZE)
+                                    {
+                                        // won't be able to insert more items into list
+                                        ongoing = false;
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
 
-            if (shouldInsert)
+            if (shouldInsert && (!insertItems.empty())) // if true, target item found. resize and insert
             {
-                // target item found, resize and insert
+                insertItemsSize = insertItems.size(); // paranoid insurance
 
+                // newListSize guaranteed 256 or less
+                newListSize = std::clamp(oldListSize + insertItemsSize, (std::size_t)0, MAX_ARRAY_SIZE);
+
+                currentList->numEntries = newListSize;
+
+                // should handle reallocating and moving existing data
+                currentEntries.resize(newListSize);
+
+                // insert data from insertItems to leveled list entries
+                for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type m = oldListSize, z = 0; m < newListSize; ++m, ++z) // add (&& z < insertItems.size()) to condition ?
+                {
+                    auto& appendForm = currentEntries[m];
+                    auto& itemForm = insertItems[z];
+
+                    appendForm.count = itemForm.count;
+                    appendForm.level = itemForm.level;
+                    appendForm.form = itemForm.form;
+                    //appendForm.itemExtra = itemForm.itemExtra;
+                }
+
+                totalLeveledItemInserts += insertItemsSize;
+                ++uniqueLeveledItemInserts;
 
                 // prepare for next list
                 insertItems.clear();
+                //insertItemsSize = 0; // unnecessary, will reassign before usage
                 insertItems.reserve(MAX_ARRAY_SIZE);
             }
-
-            //newListSize = oldListSize + 
-            //currentEntries.resize(newListSize);
         }
     }
 
