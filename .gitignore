@@ -1,0 +1,8 @@
+.idea
+.vs
+.vscode/settings.json
+build
+cmake-build*
+include/SimpleIni.h
+include/MergeMapperPluginAPI.h
+src/MergeMapperPluginAPI.cpp
