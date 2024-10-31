@@ -1,6 +1,6 @@
 # Leveled List Object Swapper
 
-[Skyrim SKSE plugin mod]()
+[Skyrim SKSE plugin mod](https://www.nexusmods.com/skyrimspecialedition/mods/132765) that performs batch and individual insertions into leveled lists.
 
 ---
 
