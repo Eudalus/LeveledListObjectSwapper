@@ -165,14 +165,15 @@ bool Utility::AcquireRangeData(std::string &value, std::uint16_t &min,
             {
                 // string to unsigned long
                 const auto minValue = std::strtoul(minString.c_str(), NULL, 10);
-                const auto maxValue = std::strtoul(minString.c_str(), NULL, 10);
+                const auto maxValue = std::strtoul(maxString.c_str(), NULL, 10);
 
                 // both values acquired
-                min = minValue;
-                max = maxValue;
+                min = std::clamp((int) std::min(minValue, maxValue), 1, 16384);
+                max = std::clamp((int) std::max(minValue, maxValue), 1, 16384);
 
                 return true;
-            } catch (const std::invalid_argument &ia)
+            }
+            catch (const std::invalid_argument &ia)
             {
                 if (debug)
                 {
@@ -185,7 +186,7 @@ bool Utility::AcquireRangeData(std::string &value, std::uint16_t &min,
             try
             {
                 // string to unsigned long
-                min = std::strtoul(value.c_str(), NULL, 10);
+                min = std::clamp((int) std::strtoul(value.c_str(), NULL, 10), 1, 16384);
                 max = min;
 
                 return true;
@@ -200,6 +201,7 @@ bool Utility::AcquireRangeData(std::string &value, std::uint16_t &min,
         }
     }
 
+    // doesn't need clamp since controlled values
     min = backup;
     max = backup;
 

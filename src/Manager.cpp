@@ -18,6 +18,15 @@ bool Manager::LoadData()
     const std::string DEFAULT_PRIORITY_STRING = "1000";
     const std::string DEFAULT_USE_ALL_STRING = "0";
 
+    const unsigned int DEFAULT_COUNT_VALUE = 1;
+    const unsigned int DEFAULT_LEVEL_VALUE = 1;
+    const float DEFAULT_CHANCE_VALUE = 100.0;
+    const float DEFAULT_CHANCE_MIN = 0.0f;
+    const float DEFAULT_CHANCE_MAX = 100.0f;
+    const unsigned int DEFAULT_PROTOCOL_VALUE = 0;
+    const unsigned int DEFAULT_PRIORITY_VALUE = 1000;
+    const unsigned int DEFAULT_USE_ALL_VALUE = 0;
+
     constexpr auto suffix = "_LLOS"sv;
 
     auto constexpr folder = R"(Data\)";
@@ -175,8 +184,71 @@ bool Manager::ProcessLeveledItem()
 {
     const auto dataHandler = RE::TESDataHandler::GetSingleton();
     const auto& lists = dataHandler->GetFormArray(RE::FormType::LeveledItem);
+    const std::size_t MAX_ARRAY_SIZE = 256;
+    const RE::BSTArrayBase::size_type numberOfLists = lists.size();
+    RE::SimpleArray<RE::LEVELED_OBJECT>::size_type oldListSize, newListSize;
+    std::size_t currentItemsSize;
+    std::vector<RE::LEVELED_OBJECT> insertItems;
+    insertItems.reserve(MAX_ARRAY_SIZE);
+    bool shouldInsert;
+    std::srand(std::time(NULL));
 
-    const auto size = lists.size();
+    // check list entries for batch inserts
+    for (RE::BSTArrayBase::size_type i = 0; i < numberOfLists; ++i)
+    {
+        RE::TESLevItem *currentList = lists[i] ? lists[i]->As<RE::TESLevItem>() : nullptr;
+
+        if (currentList)
+        {
+            shouldInsert = false;
+
+            RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = currentList->entries;
+            oldListSize = currentEntries.size();
+
+            for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type j = 0; j < oldListSize; ++j)
+            {
+                auto currentForm = currentEntries[j].form;
+
+                if (currentForm)
+                {
+                    if (dataMap.count(currentForm->formID) > 0)
+                    {
+                        std::vector<ItemData> &currentItems = dataMap.at(currentForm->formID);
+
+                        currentItemsSize = std::min(currentItems.size(), MAX_ARRAY_SIZE);
+
+                        if (currentItemsSize > 0)
+                        {
+                            shouldInsert = true;
+
+                            for (size_t k = 0; k < currentItemsSize; ++k)
+                            {
+                                insertItems.emplace_back(RE::LEVELED_OBJECT(
+                                    RE::TESForm::LookupByID(currentItems[k].insertFormID),
+                                    (rand() % (currentItems[k].maxCount - currentItems[k].minCount + 1)) + currentItems[k].minCount,
+                                    (rand() % (currentItems[k].maxLevel - currentItems[k].minLevel + 1)) + currentItems[k].minLevel,
+                                    0,
+                                    nullptr));
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (shouldInsert)
+            {
+                // target item found, resize and insert
+
+
+                // prepare for next list
+                insertItems.clear();
+                insertItems.reserve(MAX_ARRAY_SIZE);
+            }
+
+            //newListSize = oldListSize + 
+            //currentEntries.resize(newListSize);
+        }
+    }
 
     return false;
 }
