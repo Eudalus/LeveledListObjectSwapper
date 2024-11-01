@@ -278,9 +278,39 @@ bool Manager::ProcessLeveledItem()
                 insertItems.clear();
                 //insertItemsSize = 0; // unnecessary, will reassign before usage
                 insertItems.reserve(MAX_ARRAY_SIZE);
+
+                Utility::SortLeveledListArrayByLevel(currentEntries);
+
+                logger::info("{} OLD LIST SIZE", oldListSize);
+                logger::info("{} NEW LIST SIZE", newListSize);
+
+                for (int debugIterator = 0; debugIterator < currentList->numEntries; ++debugIterator)
+                {
+                    logger::info("{} NEW LIST --- FORM ID: {} --- COUNT: {} --- LEVEL: {} --- PADDING: {}", debugIterator, std::format("{:x}", currentList->entries[debugIterator].form->formID), currentList->entries[debugIterator].count, currentList->entries[debugIterator].level, currentList->entries[debugIterator].pad0C);
+                    
+                    if (currentEntries[debugIterator].itemExtra)
+                    {
+                        logger::info("{} --- HEALTH MULT         : {}", debugIterator, currentEntries[debugIterator].itemExtra->healthMult);
+                        logger::info("{} --- RANK                : {}", debugIterator, currentEntries[debugIterator].itemExtra->conditional.rank);
+
+                        if (currentEntries[debugIterator].itemExtra->conditional.global)
+                        {
+                            logger::info("{} --- VALUE           : {}", debugIterator, currentEntries[debugIterator].itemExtra->conditional.global->value);
+                        }
+
+                        if (currentEntries[debugIterator].itemExtra->owner) {
+                            logger::info("{} --- OWNER FORM ID   : {}", debugIterator, std::format("{:x}", currentEntries[debugIterator].itemExtra->owner->formID));
+                        }
+                    }
+                   
+                    logger::info("{} --- COMPLETE", debugIterator);
+                }
             }
         }
     }
+
+    logger::info("{} unique leveled item lists inserted into", uniqueLeveledItemInserts);
+    logger::info("{} total insertions into leveled item lists", totalLeveledItemInserts);
 
     return false;
 }

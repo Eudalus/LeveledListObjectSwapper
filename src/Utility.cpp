@@ -26,7 +26,7 @@ unsigned int Utility::StringToUnInt(std::string value, unsigned int backup, unsi
     return backup;
 }
 
-float Utility::StringToFloat(std::string value, float backup, bool debug = false)
+float Utility::StringToFloat(std::string value, float backup, bool debug)
 {
     try
     {
@@ -211,4 +211,38 @@ bool Utility::AcquireRangeData(std::string &value, std::uint16_t &min,
 bool Utility::CheckForLeveledList()
 {
     return false;
+}
+
+void Utility::SanitizeLeveledListArray(RE::SimpleArray<RE::LEVELED_OBJECT> &entries)
+{
+    const auto size = entries.size();
+
+    for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type i = 0; i < size; ++i)
+    {
+        entries[i].itemExtra = nullptr;
+        entries[i].pad0C = 0;
+    }
+}
+
+void Utility::SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT> &entries)
+{
+    const auto size = entries.size();
+
+    for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type i = 0; i < size; ++i)
+    {
+        for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type k = 0; (k + 1) < size; ++k)
+        {
+            if (entries[k].level > entries[k + 1].level)
+            {
+                RE::LEVELED_OBJECT tempObject(entries[k + 1]);
+
+
+                entries[k + 1] = entries[k];
+                entries[k] = tempObject;
+
+            }
+        }
+    }
+
+    SanitizeLeveledListArray(entries);
 }

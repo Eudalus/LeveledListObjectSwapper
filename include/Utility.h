@@ -33,4 +33,8 @@ public:
                                  bool debug = false);
 
     static bool CheckForLeveledList();
+
+    static void SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT>& entries);
+
+    static void SanitizeLeveledListArray(RE::SimpleArray<RE::LEVELED_OBJECT>& entries);
 };
