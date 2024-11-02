@@ -346,10 +346,6 @@ int Utility::CheckFormType(const RE::TESForm *form)
             return Data::ITEM_FORM_TYPE;
         case RE::FormType::Note:
             return Data::ITEM_FORM_TYPE;
-
-        default:
-            return Data::INVALID_FORM_TYPE;
-            break;
         }
     }
 
@@ -383,7 +379,10 @@ std::uint16_t Utility::ClampProtocol(const std::uint16_t value)
     if (((value >= Data::VALID_SINGLE_PROTOCOL_INSERT_MIN) && (value <= Data::VALID_SINGLE_PROTOCOL_INSERT_MAX)) ||
         ((value >= Data::VALID_MULTI_PROTOCOL_INSERT_MIN) && (value <= Data::VALID_MULTI_PROTOCOL_INSERT_MAX)) ||
         ((value >= Data::VALID_SINGLE_PROTOCOL_REMOVE_MIN) && (value <= Data::VALID_SINGLE_PROTOCOL_REMOVE_MAX)) ||
-        ((value >= Data::VALID_MULTI_PROTOCOL_REMOVE_MIN) && (value <= Data::VALID_MULTI_PROTOCOL_REMOVE_MAX)))
+        ((value >= Data::VALID_MULTI_PROTOCOL_REMOVE_MIN) && (value <= Data::VALID_MULTI_PROTOCOL_REMOVE_MAX)) ||
+        ((value >= Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MIN) && (value <= Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MAX)) ||
+        ((value >= Data::VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN) && (value <= Data::VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX)) ||
+        ((value >= Data::VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN) && (value <= Data::VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX)))
     {
         return value;
     }

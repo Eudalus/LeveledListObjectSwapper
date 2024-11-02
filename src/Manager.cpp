@@ -2,6 +2,7 @@
 #include <SimpleIni.h>
 #include "Utility.h"
 #include "Data.h"
+#include <algorithm>>
 
 namespace logger = SKSE::log;
 
@@ -50,8 +51,6 @@ bool Manager::LoadData()
     std::string insertEditorID;
     std::string insertPlugin;
     RE::FormID insertFormID;
-
-    bool compatibleFormTypes;
 
     for (const auto &entry : std::filesystem::directory_iterator(folder))
     {
@@ -104,6 +103,7 @@ bool Manager::LoadData()
 
             currentData.targetFormType = Utility::CheckFormType(currentData.targetForm);
 
+            // bypass all data under current section if target is not valid
             if (!currentData.targetForm || currentData.targetFormType == Data::INVALID_FORM_TYPE)
             {
                 ++removedDataCounter;
@@ -118,19 +118,12 @@ bool Manager::LoadData()
 
             currentData.insertFormType = Utility::CheckFormType(currentData.insertForm);
 
-            compatibleFormTypes = Utility::CheckCompatibleFormTypes(currentData.insertFormType, currentData.targetFormType);
-
             Utility::GetIniValue(ini, protocolString, section, "Protocol",
                               DEFAULT_PROTOCOL_STRING);
             logger::info("Protocol: {}", protocolString);
 
-            currentData.protocol = Utility::ClampProtocol(Utility::StringToUnInt(protocolString, DEFAULT_PROTOCOL_VALUE));
-
-            if ((!currentData.insertForm) && (currentData.protocol >= 100 ))
-            {
-
-                continue;
-            }
+            //currentData.protocol = Utility::ClampProtocol(Utility::StringToUnInt(protocolString, DEFAULT_PROTOCOL_VALUE));
+            currentData.protocol = Utility::StringToUnInt(protocolString, DEFAULT_PROTOCOL_VALUE);
 
             Utility::GetIniValue(ini, countString, section, "Count", DEFAULT_COUNT_STRING);
             logger::info("Count: {}", countString);
@@ -163,14 +156,22 @@ bool Manager::LoadData()
 
             currentData.useAll = Utility::StringToUnInt(useAllString, DEFAULT_USE_ALL_VALUE);
 
+            DirectProtocol(currentData);
+
+            // move this logic into direct protocol
             if (itemMap.count(currentData.targetForm->formID) == 0)
             {
                 itemMap.emplace(currentData.targetForm->formID, std::vector<ItemData>());
                 itemMap.at(currentData.targetForm->formID).emplace_back(currentData);
+
+                ++totalTargetSize;
+                ++totalDataSize;
             }
             else
             {
                 itemMap.at(currentData.targetForm->formID).emplace_back(currentData);
+
+                ++totalDataSize;
             }
 
             //logger::info("READ COMPLETE");
@@ -179,19 +180,21 @@ bool Manager::LoadData()
 
     logger::info("{:*^30}", "RESULTS");
 
-    logger::info("{} valid data found", itemMap.size());
+    logger::info("{} valid data found", totalDataSize);
     logger::info("{} invalid data removed", removedDataCounter);
 
     logger::info("{:*^30}", "INFO");
 
-    return !itemMap.empty() || !npcMap.empty() || !spellMap.empty() || !itemLeveledMap.empty() || !npcLeveledMap.empty() || !spellLeveledMap.empty();
+    SortMapData();
+
+    return totalDataSize >= 1;
 }
 
 bool Manager::ProcessLeveledItem()
 {
     const auto dataHandler = RE::TESDataHandler::GetSingleton();
     const auto& lists = dataHandler->GetFormArray(RE::FormType::LeveledItem);
-    const std::size_t MAX_ARRAY_SIZE = 256;
+    
     const RE::BSTArrayBase::size_type numberOfLists = lists.size();
 
     RE::SimpleArray<RE::LEVELED_OBJECT>::size_type oldListSize, newListSize;
@@ -199,7 +202,7 @@ bool Manager::ProcessLeveledItem()
     bool shouldInsert, ongoing;
     
     std::vector<RE::LEVELED_OBJECT> insertItems;
-    insertItems.reserve(MAX_ARRAY_SIZE);
+    insertItems.reserve(Data::MAX_ENTRY_SIZE);
 
     std::srand(std::time(NULL));
 
@@ -214,7 +217,7 @@ bool Manager::ProcessLeveledItem()
     {
         RE::TESLevItem *currentList = lists[i] ? lists[i]->As<RE::TESLevItem>() : nullptr;
 
-        if (currentList && (currentList->numEntries < MAX_ARRAY_SIZE))
+        if (currentList && (currentList->numEntries < Data::MAX_ENTRY_SIZE))
         {
             shouldInsert = false;
             ongoing = true;
@@ -232,14 +235,14 @@ bool Manager::ProcessLeveledItem()
                     {
                         std::vector<ItemData> &currentItems = itemMap.at(currentForm->formID);
 
-                        currentItemsSize = std::min(currentItems.size(), MAX_ARRAY_SIZE);
+                        currentItemsSize = std::min(currentItems.size(), Data::MAX_ENTRY_SIZE);
 
                         if (currentItemsSize > 0)
                         {
                             shouldInsert = true;
                             insertItemsSize = insertItems.size();
 
-                            for (size_t k = 0; k < currentItemsSize && ((insertItemsSize + oldListSize) < MAX_ARRAY_SIZE) && ongoing; ++k)
+                            for (size_t k = 0; k < currentItemsSize && ((insertItemsSize + oldListSize) < Data::MAX_ENTRY_SIZE) && ongoing; ++k)
                             {
                                 auto insertForm = currentItems[k].insertForm;
 
@@ -248,7 +251,7 @@ bool Manager::ProcessLeveledItem()
                                     // store pointer on ItemData to insert directly to reduce lookup?
                                     insertItems.emplace_back(RE::LEVELED_OBJECT(insertForm, (rand() % (currentItems[k].maxCount - currentItems[k].minCount + 1)) + currentItems[k].minCount, (rand() % (currentItems[k].maxLevel - currentItems[k].minLevel + 1)) + currentItems[k].minLevel, 0, nullptr));
                                     insertItemsSize = insertItems.size();
-                                    if (insertItemsSize + oldListSize >= MAX_ARRAY_SIZE)
+                                    if (insertItemsSize + oldListSize >= Data::MAX_ENTRY_SIZE)
                                     {
                                         // won't be able to insert more items into list
                                         ongoing = false;
@@ -264,8 +267,8 @@ bool Manager::ProcessLeveledItem()
             {
                 insertItemsSize = insertItems.size(); // paranoid insurance
 
-                // newListSize guaranteed 256 or less
-                newListSize = std::clamp(oldListSize + insertItemsSize, (std::size_t)0, MAX_ARRAY_SIZE);
+                // newListSize guaranteed 255 or less
+                newListSize = std::clamp(oldListSize + insertItemsSize, (std::size_t)0, Data::MAX_ENTRY_SIZE);
 
                 currentList->numEntries = newListSize;
 
@@ -290,7 +293,7 @@ bool Manager::ProcessLeveledItem()
                 // prepare for next list
                 insertItems.clear();
                 //insertItemsSize = 0; // unnecessary, will reassign before usage
-                insertItems.reserve(MAX_ARRAY_SIZE);
+                insertItems.reserve(Data::MAX_ENTRY_SIZE);
 
                 Utility::SortLeveledListArrayByLevel(currentEntries);
 
@@ -342,4 +345,75 @@ bool Manager::ProcessLeveledSpell()
     const auto& lists = dataHandler->GetFormArray(RE::FormType::LeveledSpell);
 
     return false;
+}
+
+void Manager::SortMapData()
+{
+    for (auto& [key, value] : itemMap)
+    {
+        std::sort(value.begin(), value.end());
+    }
+
+    for (auto& [key, value] : npcMap)
+    {
+        std::sort(value.begin(), value.end());
+    }
+
+    for (auto& [key, value] : spellMap)
+    {
+        std::sort(value.begin(), value.end());
+    }
+
+    for (auto& [key, value] : itemLeveledMap)
+    {
+        std::sort(value.begin(), value.end());
+    }
+
+    for (auto& [key, value] : npcLeveledMap)
+    {
+        std::sort(value.begin(), value.end());
+    }
+
+    for (auto& [key, value] : spellLeveledMap)
+    {
+        std::sort(value.begin(), value.end());
+    }
+}
+
+bool Manager::DirectProtocol(ItemData& data)
+{
+    const auto protocol = data.protocol;
+
+    if (Utility::CheckCompatibleFormTypes(data.insertFormType, data.targetFormType)) // check if form types are compatible
+    {
+
+    }
+    else // form types are not compatible
+    {
+        // check to see if protocol doesn't require valid insert
+        // target already confirmed beforehand in LoadData, add to appropriate map
+        switch (protocol)
+	    {
+		case Data::VALID_SINGLE_PROTOCOL_NO_INSERT_REMOVE:
+            data.processCounter = 1;
+
+            return true;
+        case Data::VALID_MULTI_PROTOCOL_NO_INSERT_REMOVE:
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            return true;
+	    }
+    }
+
+    ++removedDataCounter;
+    return false;
+}
+
+bool Manager::InsertIntoBatchMap(ItemData& data)
+{
+
+}
+
+bool Manager::InsertIntoFocusMap(ItemData& data)
+{
+
 }

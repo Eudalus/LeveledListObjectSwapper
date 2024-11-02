@@ -14,12 +14,18 @@ public:
     bool ProcessLeveledItem();
     bool ProcessLeveledNPC();
     bool ProcessLeveledSpell();
+    void SortMapData();
+    bool DirectProtocol(ItemData& data);
+    bool InsertIntoBatchMap(ItemData& data);
+    bool InsertIntoFocusMap(ItemData& data);
 
+    // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
     std::unordered_map<RE::FormID, std::vector<ItemData>> itemMap;
     std::unordered_map<RE::FormID, std::vector<ItemData>> npcMap;
     std::unordered_map<RE::FormID, std::vector<ItemData>> spellMap;
 
+    // ----- FOCUS MAPS -----
     // specific inserts with leveled list targets
     std::unordered_map<RE::FormID, std::vector<ItemData>> itemLeveledMap;
     std::unordered_map<RE::FormID, std::vector<ItemData>> npcLeveledMap;
@@ -37,4 +43,6 @@ public:
     std::size_t uniqueLeveledSpellInserts = 0;
     std::size_t totalLeveledSpellInserts = 0;
 
+    std::size_t totalTargetSize = 0;
+    std::size_t totalDataSize = 0;
 };

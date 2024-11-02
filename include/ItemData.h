@@ -13,6 +13,7 @@ public:
     RE::TESForm* insertForm;
     std::int8_t targetFormType;
     std::int8_t insertFormType;
+    std::uint8_t processCounter;
 
     bool operator<(const ItemData &other);
 
