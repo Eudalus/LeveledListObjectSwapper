@@ -1,4 +1,5 @@
 #include "Utility.h"
+#include "Data.h"
 
 namespace logger = SKSE::log;
 
@@ -230,12 +231,11 @@ void Utility::SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT> &e
 
     for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type i = 0; i < size; ++i)
     {
-        for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type k = 0; (k + 1) < size; ++k)
+        for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type k = 0; (k + 1) < (size - i); ++k)
         {
             if (entries[k].level > entries[k + 1].level)
             {
                 RE::LEVELED_OBJECT tempObject(entries[k + 1]);
-
 
                 entries[k + 1] = entries[k];
                 entries[k] = tempObject;
@@ -245,4 +245,76 @@ void Utility::SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT> &e
     }
 
     SanitizeLeveledListArray(entries);
+}
+
+/// <summary>
+/// Determines what leveled list can accept the form argument.
+/// </summary>
+/// <param name="form"></param>
+/// <returns>
+/// 0 if form is null or form is not an acceptable form type
+/// 1 if form can insert into a leveled item list
+/// 2 if form is a leveled item list
+/// 3 if form can insert into a leveled npc list
+/// 4 if form is a leveled npc list
+/// 5 if form can insert into a leveled spell list
+/// 6 if form is a leveled spell list
+/// </returns>
+int Utility::CheckFormType(const RE::TESForm *form)
+{
+    if (form)
+    {
+        const RE::FormType formType = form->GetFormType();
+
+        switch (formType)
+        {
+        // ITEM
+        case RE::FormType::Armor:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Weapon:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Misc:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Ingredient:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::AlchemyItem:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Book:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Ammo:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::SoulGem:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Scroll:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::KeyMaster:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Light:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Apparatus:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Note:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::LeveledItem:
+            return Data::LEVELED_ITEM_FORM_TYPE;
+
+        // NPC
+        case RE::FormType::NPC:
+            return Data::NPC_FORM_TYPE;
+        case RE::FormType::LeveledNPC:
+            return Data::LEVELED_NPC_FORM_TYPE;
+
+        // SPELL
+        case RE::FormType::Spell:
+            return Data::SPELL_FORM_TYPE;
+        case RE::FormType::LeveledSpell:
+            return Data::LEVELED_SPELL_FORM_TYPE;
+
+        default:
+            return Data::INVALID_FORM_TYPE;
+            break;
+        }
+    }
+
+    return Data::INVALID_FORM_TYPE;
 }

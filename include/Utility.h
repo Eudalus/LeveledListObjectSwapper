@@ -37,4 +37,19 @@ public:
     static void SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT>& entries);
 
     static void SanitizeLeveledListArray(RE::SimpleArray<RE::LEVELED_OBJECT>& entries);
+
+    /// <summary>
+    /// Determines what leveled list can accept the form argument.
+    /// </summary>
+    /// <param name="form"></param>
+    /// <returns>
+    /// 0 if form is null or form is not an acceptable form type
+    /// 1 if form can insert into a leveled item list
+    /// 2 if form is a leveled item list
+    /// 3 if form can insert into a leveled npc list
+    /// 4 if form is a leveled npc list
+    /// 5 if form can insert into a leveled spell list
+    /// 6 if form is a leveled spell list
+    /// </returns>
+    static int CheckFormType(const RE::TESForm* form);
 };

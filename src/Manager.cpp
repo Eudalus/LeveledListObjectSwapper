@@ -196,6 +196,12 @@ bool Manager::ProcessLeveledItem()
 
     std::srand(std::time(NULL));
 
+    std::default_random_engine randomEngine;
+    std::uniform_real_distribution<float> randomDistributor(0.0f, 100.0f);
+
+    //randomDistributor(randomEngine)
+    // check for leveled list targets
+
     // check list entries for batch inserts
     for (RE::BSTArrayBase::size_type i = 0; i < numberOfLists; ++i)
     {
