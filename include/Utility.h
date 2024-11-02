@@ -28,6 +28,14 @@ public:
                                         std::string &plugin,
                                         RE::FormID &formID);
 
+    static RE::TESForm *AcquireForm(const std::string &value, std::string &editor, std::string &plugin, RE::FormID &formID);
+
+    // move into AcquireForm
+    //static RE::TESForm *AcquireFormFromFormID(const std::string &value, const std::string &plugin, const RE::FormID &formID);
+
+    // unnecessary
+    //static RE::TESForm *AcquireFormFromEditorID(const std::string &value, const std::string &editor);
+
     static bool AcquireRangeData(std::string &value, std::uint16_t &min,
                                  std::uint16_t &max, unsigned int backup,
                                  bool debug = false);
@@ -52,4 +60,8 @@ public:
     /// 6 if form is a leveled spell list
     /// </returns>
     static int CheckFormType(const RE::TESForm* form);
+
+    static bool CheckCompatibleFormTypes(const std::uint8_t insert, const std::uint8_t target);
+
+    static std::uint16_t ClampProtocol(const std::uint16_t value);
 };

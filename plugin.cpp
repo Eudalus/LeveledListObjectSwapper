@@ -90,9 +90,18 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 
         if (manager.LoadData())
         {
-            manager.ProcessLeveledItem();
-            manager.ProcessLeveledNPC();
-            manager.ProcessLeveledSpell();
+            if (!manager.itemMap.empty() || !manager.itemLeveledMap.empty())
+            {
+                manager.ProcessLeveledItem();
+            }
+            if (!manager.npcMap.empty() || !manager.npcLeveledMap.empty())
+            {
+                manager.ProcessLeveledNPC();
+            }
+            if (!manager.spellMap.empty() || !manager.spellLeveledMap.empty())
+            {
+                manager.ProcessLeveledSpell();
+            }
 
             /*
             // const RE::BSTArray<RE::TESLevItem*>& lists

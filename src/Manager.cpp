@@ -1,6 +1,7 @@
 #include "Manager.h"
 #include <SimpleIni.h>
 #include "Utility.h"
+#include "Data.h"
 
 namespace logger = SKSE::log;
 
@@ -41,8 +42,16 @@ bool Manager::LoadData()
     std::string priorityString;
     std::string useAllString;
     std::size_t position;
-    bool targetGood;
-    bool insertGood;
+
+    std::string targetEditorID;
+    std::string targetPlugin;
+    RE::FormID targetFormID;
+
+    std::string insertEditorID;
+    std::string insertPlugin;
+    RE::FormID insertFormID;
+
+    bool compatibleFormTypes;
 
     for (const auto &entry : std::filesystem::directory_iterator(folder))
     {
@@ -91,9 +100,11 @@ bool Manager::LoadData()
                               DEFAULT_TARGET_STRING);
             logger::info("Target: {}", targetString);
 
-            targetGood = Utility::AcquireFormDataAndCheck(targetString, currentData.targetEditorID, currentData.targetPlugin, currentData.targetFormID);
+            currentData.targetForm = Utility::AcquireForm(targetString, targetEditorID, targetPlugin, targetFormID);
 
-            if (!targetGood)
+            currentData.targetFormType = Utility::CheckFormType(currentData.targetForm);
+
+            if (!currentData.targetForm || currentData.targetFormType == Data::INVALID_FORM_TYPE)
             {
                 ++removedDataCounter;
                 continue;
@@ -103,11 +114,21 @@ bool Manager::LoadData()
                               DEFAULT_INSERT_STRING);
             logger::info("Insert: {}", insertString);
 
-            insertGood = Utility::AcquireFormDataAndCheck(insertString, currentData.insertEditorID, currentData.insertPlugin, currentData.insertFormID);
+            currentData.insertForm = Utility::AcquireForm(insertString, insertEditorID, insertPlugin, insertFormID);
 
-            if (!insertGood)
+            currentData.insertFormType = Utility::CheckFormType(currentData.insertForm);
+
+            compatibleFormTypes = Utility::CheckCompatibleFormTypes(currentData.insertFormType, currentData.targetFormType);
+
+            Utility::GetIniValue(ini, protocolString, section, "Protocol",
+                              DEFAULT_PROTOCOL_STRING);
+            logger::info("Protocol: {}", protocolString);
+
+            currentData.protocol = Utility::ClampProtocol(Utility::StringToUnInt(protocolString, DEFAULT_PROTOCOL_VALUE));
+
+            if ((!currentData.insertForm) && (currentData.protocol >= 100 ))
             {
-                ++removedDataCounter;
+
                 continue;
             }
 
@@ -130,12 +151,6 @@ bool Manager::LoadData()
                 Utility::StringToFloat(chanceString, DEFAULT_CHANCE_VALUE),
                 DEFAULT_CHANCE_MIN, DEFAULT_CHANCE_MAX);
 
-            Utility::GetIniValue(ini, protocolString, section, "Protocol",
-                              DEFAULT_PROTOCOL_STRING);
-            logger::info("Protocol: {}", protocolString);
-
-            currentData.protocol = Utility::StringToUnInt(protocolString, DEFAULT_PROTOCOL_VALUE);
-
             Utility::GetIniValue(ini, priorityString, section, "Priority",
                               DEFAULT_PRIORITY_STRING);
             logger::info("Priority: {}", priorityString);
@@ -148,22 +163,14 @@ bool Manager::LoadData()
 
             currentData.useAll = Utility::StringToUnInt(useAllString, DEFAULT_USE_ALL_VALUE);
 
-            /*
-            if ((!insertGood) && (currentData.protocol != ))
+            if (itemMap.count(currentData.targetForm->formID) == 0)
             {
-
-                continue;
-            }
-            */
-
-            if (dataMap.count(currentData.targetFormID) == 0)
-            {
-                dataMap.emplace(currentData.targetFormID, std::vector<ItemData>());
-                dataMap.at(currentData.targetFormID).emplace_back(currentData);
+                itemMap.emplace(currentData.targetForm->formID, std::vector<ItemData>());
+                itemMap.at(currentData.targetForm->formID).emplace_back(currentData);
             }
             else
             {
-                dataMap.at(currentData.targetFormID).emplace_back(currentData);
+                itemMap.at(currentData.targetForm->formID).emplace_back(currentData);
             }
 
             //logger::info("READ COMPLETE");
@@ -172,12 +179,12 @@ bool Manager::LoadData()
 
     logger::info("{:*^30}", "RESULTS");
 
-    logger::info("{} valid data found", dataMap.size());
+    logger::info("{} valid data found", itemMap.size());
     logger::info("{} invalid data removed", removedDataCounter);
 
     logger::info("{:*^30}", "INFO");
 
-    return !dataMap.empty();
+    return !itemMap.empty() || !npcMap.empty() || !spellMap.empty() || !itemLeveledMap.empty() || !npcLeveledMap.empty() || !spellLeveledMap.empty();
 }
 
 bool Manager::ProcessLeveledItem()
@@ -221,9 +228,9 @@ bool Manager::ProcessLeveledItem()
 
                 if (currentForm)
                 {
-                    if (dataMap.count(currentForm->formID) > 0)
+                    if (itemMap.count(currentForm->formID) > 0)
                     {
-                        std::vector<ItemData> &currentItems = dataMap.at(currentForm->formID);
+                        std::vector<ItemData> &currentItems = itemMap.at(currentForm->formID);
 
                         currentItemsSize = std::min(currentItems.size(), MAX_ARRAY_SIZE);
 
@@ -234,7 +241,7 @@ bool Manager::ProcessLeveledItem()
 
                             for (size_t k = 0; k < currentItemsSize && ((insertItemsSize + oldListSize) < MAX_ARRAY_SIZE) && ongoing; ++k)
                             {
-                                auto insertForm = RE::TESForm::LookupByID(currentItems[k].insertFormID);
+                                auto insertForm = currentItems[k].insertForm;
 
                                 if (insertForm && currentList->GetCanContainFormsOfType(insertForm->GetFormType()))
                                 {

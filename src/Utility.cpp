@@ -139,14 +139,49 @@ bool Utility::AcquireFormDataAndCheck(const std::string &value,
 {
     if (AcquireFormData(value, editor, plugin, formID))
     {
-        if (CheckEditorID(editor, formID)) {
+        if (CheckEditorID(editor, formID))
+        {
             return true;
-        } else if (CheckFormID(plugin, formID)) {
+        }
+        else if (CheckFormID(plugin, formID))
+        {
             return true;
         }
     }
 
     return false;
+}
+
+RE::TESForm *Utility::AcquireForm(const std::string &value, std::string &editor, std::string &plugin, RE::FormID &formID)
+{
+    const auto dataHandler = RE::TESDataHandler::GetSingleton();
+
+    RE::TESForm *form = nullptr;
+
+    if (AcquireFormData(value, editor, plugin, formID))
+    {
+        if (g_mergeMapperInterface)
+        {
+            const auto newFormID = g_mergeMapperInterface->GetNewFormID(plugin.c_str(), formID);
+
+            plugin = newFormID.first;
+            formID = newFormID.second;
+
+            form = RE::TESForm::LookupByID(dataHandler->LookupFormID(formID, plugin));
+
+        }
+        else
+        {
+            form = RE::TESForm::LookupByID(dataHandler->LookupFormID(formID, plugin));
+        }
+
+        if (!form)
+        {
+            form = RE::TESForm::LookupByEditorID(editor);
+        }
+    }
+
+    return form;
 }
 
 bool Utility::AcquireRangeData(std::string &value, std::uint16_t &min,
@@ -287,14 +322,6 @@ int Utility::CheckFormType(const RE::TESForm *form)
             return Data::ITEM_FORM_TYPE;
         case RE::FormType::Scroll:
             return Data::ITEM_FORM_TYPE;
-        case RE::FormType::KeyMaster:
-            return Data::ITEM_FORM_TYPE;
-        case RE::FormType::Light:
-            return Data::ITEM_FORM_TYPE;
-        case RE::FormType::Apparatus:
-            return Data::ITEM_FORM_TYPE;
-        case RE::FormType::Note:
-            return Data::ITEM_FORM_TYPE;
         case RE::FormType::LeveledItem:
             return Data::LEVELED_ITEM_FORM_TYPE;
 
@@ -310,6 +337,16 @@ int Utility::CheckFormType(const RE::TESForm *form)
         case RE::FormType::LeveledSpell:
             return Data::LEVELED_SPELL_FORM_TYPE;
 
+        // ITEM AGAIN
+        case RE::FormType::KeyMaster:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Light:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Apparatus:
+            return Data::ITEM_FORM_TYPE;
+        case RE::FormType::Note:
+            return Data::ITEM_FORM_TYPE;
+
         default:
             return Data::INVALID_FORM_TYPE;
             break;
@@ -317,4 +354,41 @@ int Utility::CheckFormType(const RE::TESForm *form)
     }
 
     return Data::INVALID_FORM_TYPE;
+}
+
+bool Utility::CheckCompatibleFormTypes(const std::uint8_t insert, const std::uint8_t target)
+{
+    if ((insert == Data::INVALID_FORM_TYPE) || (target == Data::INVALID_FORM_TYPE))
+    {
+        return false;
+    }
+    else if ((insert == Data::ITEM_FORM_TYPE && ((target == Data::ITEM_FORM_TYPE) || (target == Data::LEVELED_ITEM_FORM_TYPE))) || (insert == Data::LEVELED_ITEM_FORM_TYPE && ((target == Data::ITEM_FORM_TYPE) || (target == Data::LEVELED_ITEM_FORM_TYPE))))
+    {
+        return true;
+    }
+    else if ((insert == Data::NPC_FORM_TYPE && ((target == Data::NPC_FORM_TYPE) || (target == Data::LEVELED_NPC_FORM_TYPE))) || (insert == Data::LEVELED_NPC_FORM_TYPE && ((target == Data::NPC_FORM_TYPE) || (target == Data::LEVELED_NPC_FORM_TYPE))))
+    {
+        return true;
+    }
+    else if ((insert == Data::SPELL_FORM_TYPE && ((target == Data::SPELL_FORM_TYPE) || (target == Data::LEVELED_SPELL_FORM_TYPE))) || (insert == Data::LEVELED_SPELL_FORM_TYPE && ((target == Data::SPELL_FORM_TYPE) || (target == Data::LEVELED_SPELL_FORM_TYPE))))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+std::uint16_t Utility::ClampProtocol(const std::uint16_t value)
+{
+    if (((value >= Data::VALID_SINGLE_PROTOCOL_INSERT_MIN) && (value <= Data::VALID_SINGLE_PROTOCOL_INSERT_MAX)) ||
+        ((value >= Data::VALID_MULTI_PROTOCOL_INSERT_MIN) && (value <= Data::VALID_MULTI_PROTOCOL_INSERT_MAX)) ||
+        ((value >= Data::VALID_SINGLE_PROTOCOL_REMOVE_MIN) && (value <= Data::VALID_SINGLE_PROTOCOL_REMOVE_MAX)) ||
+        ((value >= Data::VALID_MULTI_PROTOCOL_REMOVE_MIN) && (value <= Data::VALID_MULTI_PROTOCOL_REMOVE_MAX)))
+    {
+        return value;
+    }
+    else
+    {
+        return Data::DEFAULT_PROTOCAL_VALUE;
+    }
 }

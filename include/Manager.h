@@ -15,12 +15,6 @@ public:
     bool ProcessLeveledNPC();
     bool ProcessLeveledSpell();
 
-    const unsigned int VALID_SINGLE_PROTOCOL_MIN = 0;
-    const unsigned int VALID_SINGLE_PROTOCOL_MAX = 1;
-
-    const unsigned int VALID_MULTI_PROTOCOL_MIN = 100;
-    const unsigned int VALID_MULTI_PROTOCOL_MAX = 101;
-
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
     std::unordered_map<RE::FormID, std::vector<ItemData>> itemMap;
     std::unordered_map<RE::FormID, std::vector<ItemData>> npcMap;
@@ -34,13 +28,13 @@ public:
     std::size_t removedDataCounter = 0; // bad data from ini file
     std::size_t wrongDataCounter = 0; // good data from ini file, but can't insert into target
 
-    std::size_t uniqueLeveledItemInserts;
-    std::size_t totalLeveledItemInserts;
+    std::size_t uniqueLeveledItemInserts = 0;
+    std::size_t totalLeveledItemInserts = 0;
 
-    std::size_t uniqueLeveledNPCInserts;
-    std::size_t totalLeveledNPCInserts;
+    std::size_t uniqueLeveledNPCInserts = 0;
+    std::size_t totalLeveledNPCInserts = 0;
 
-    std::size_t uniqueLeveledSpellInserts;
-    std::size_t totalLeveledSpellInserts;
+    std::size_t uniqueLeveledSpellInserts = 0;
+    std::size_t totalLeveledSpellInserts = 0;
 
 };
