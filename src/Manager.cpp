@@ -42,7 +42,6 @@ bool Manager::LoadData()
     std::string protocolString;
     std::string priorityString;
     std::string useAllString;
-    std::size_t position;
 
     std::string targetEditorID;
     std::string targetPlugin;
@@ -217,9 +216,9 @@ bool Manager::ProcessLeveledItem()
 
                 if (currentForm)
                 {
-                    if (itemMap.count(currentForm->formID) > 0)
+                    if (auto mapIterator = itemMap.find(currentForm->formID); mapIterator != itemMap.end()) // if statement variable declaration is cruise control for cool
                     {
-                        std::vector<ItemData> &currentItems = itemMap.at(currentForm->formID);
+                        std::vector<ItemData> &currentItems = mapIterator->second;
 
                         currentItemsSize = std::min(currentItems.size(), Data::MAX_ENTRY_SIZE);
 
@@ -239,7 +238,7 @@ bool Manager::ProcessLeveledItem()
                                     insertItemsSize = insertItems.size();
                                     if (insertItemsSize + oldListSize >= Data::MAX_ENTRY_SIZE)
                                     {
-                                        // won't be able to insert more items into list
+                                        // won't be able to insert more items into list, lets 2nd level for loop terminate early
                                         ongoing = false;
                                     }
                                 }
@@ -480,20 +479,20 @@ bool Manager::InsertIntoFocusMap(ItemData& data)
 
 bool Manager::InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map)
 {
-    if (map.count(data.targetForm->formID) == 0)
+    if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end()) // if statement variable declaration is cruise control for cool
     {
-        map.emplace(data.targetForm->formID, std::vector<ItemData>());
-        map.at(data.targetForm->formID).emplace_back(data);
+        mapIterator->second.emplace_back(data);
 
-        ++totalTargetSize;
         ++totalDataSize;
 
         return true;
     }
     else
     {
+        map.emplace(data.targetForm->formID, std::vector<ItemData>());
         map.at(data.targetForm->formID).emplace_back(data);
 
+        ++totalTargetSize;
         ++totalDataSize;
 
         return true;
