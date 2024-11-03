@@ -30,17 +30,9 @@ public:
 
     static RE::TESForm *AcquireForm(const std::string &value, std::string &editor, std::string &plugin, RE::FormID &formID);
 
-    // move into AcquireForm
-    //static RE::TESForm *AcquireFormFromFormID(const std::string &value, const std::string &plugin, const RE::FormID &formID);
-
-    // unnecessary
-    //static RE::TESForm *AcquireFormFromEditorID(const std::string &value, const std::string &editor);
-
     static bool AcquireRangeData(std::string &value, std::uint16_t &min,
                                  std::uint16_t &max, unsigned int backup,
                                  bool debug = false);
-
-    static bool CheckForLeveledList();
 
     static void SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT>& entries);
 

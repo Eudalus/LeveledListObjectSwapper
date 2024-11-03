@@ -128,12 +128,14 @@ bool Manager::LoadData()
             Utility::GetIniValue(ini, countString, section, "Count", DEFAULT_COUNT_STRING);
             logger::info("Count: {}", countString);
 
+            // pass by reference assignment
             Utility::AcquireRangeData(countString, currentData.minCount, currentData.maxCount, DEFAULT_COUNT_VALUE);
 
             Utility::GetIniValue(ini, levelString, section, "Level",
                               DEFAULT_LEVEL_STRING);
             logger::info("Level: {}", levelString);
 
+            // pass by reference assignment
             Utility::AcquireRangeData(levelString, currentData.minLevel, currentData.maxLevel, DEFAULT_LEVEL_VALUE);
 
             Utility::GetIniValue(ini, chanceString, section, "Chance",
@@ -157,22 +159,6 @@ bool Manager::LoadData()
             currentData.useAll = Utility::StringToUnInt(useAllString, DEFAULT_USE_ALL_VALUE);
 
             DirectProtocol(currentData);
-
-            // move this logic into direct protocol
-            if (itemMap.count(currentData.targetForm->formID) == 0)
-            {
-                itemMap.emplace(currentData.targetForm->formID, std::vector<ItemData>());
-                itemMap.at(currentData.targetForm->formID).emplace_back(currentData);
-
-                ++totalTargetSize;
-                ++totalDataSize;
-            }
-            else
-            {
-                itemMap.at(currentData.targetForm->formID).emplace_back(currentData);
-
-                ++totalDataSize;
-            }
 
             //logger::info("READ COMPLETE");
         }
@@ -386,7 +372,48 @@ bool Manager::DirectProtocol(ItemData& data)
 
     if (Utility::CheckCompatibleFormTypes(data.insertFormType, data.targetFormType)) // check if form types are compatible
     {
-
+        if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_MAX))
+        {
+            data.processCounter = 1;
+            InsertIntoBatchMap(data);
+            return true;
+        }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_INSERT_MAX))
+        {
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            InsertIntoBatchMap(data);
+            return true;
+        }
+        else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_REMOVE_MAX))
+        {
+            data.processCounter = 1;
+            InsertIntoBatchMap(data);
+            return true;
+        }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_REMOVE_MAX))
+        {
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            InsertIntoBatchMap(data);
+            return true;
+        }
+        else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MAX))
+        {
+            data.processCounter = 1;
+            InsertIntoFocusMap(data);
+            return true;
+        }
+        else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX))
+        {
+            data.processCounter = 1;
+            InsertIntoFocusMap(data);
+            return true;
+        }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX))
+        {
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            InsertIntoFocusMap(data);
+            return true;
+        }
     }
     else // form types are not compatible
     {
@@ -396,10 +423,11 @@ bool Manager::DirectProtocol(ItemData& data)
 	    {
 		case Data::VALID_SINGLE_PROTOCOL_NO_INSERT_REMOVE:
             data.processCounter = 1;
-
+            InsertIntoBatchMap(data);
             return true;
         case Data::VALID_MULTI_PROTOCOL_NO_INSERT_REMOVE:
             data.processCounter = Data::MAX_ENTRY_SIZE;
+            InsertIntoBatchMap(data);
             return true;
 	    }
     }
@@ -410,10 +438,66 @@ bool Manager::DirectProtocol(ItemData& data)
 
 bool Manager::InsertIntoBatchMap(ItemData& data)
 {
+    switch (data.insertFormType)
+	{
+    case Data::ITEM_FORM_TYPE:
+    case Data::LEVELED_ITEM_FORM_TYPE:
+        InsertIntoMap(data, itemMap);
+        return true;
+    case Data::NPC_FORM_TYPE:
+    case Data::LEVELED_NPC_FORM_TYPE:
+        InsertIntoMap(data, npcMap);
+        return true;
+    case Data::SPELL_FORM_TYPE:
+    case Data::LEVELED_SPELL_FORM_TYPE:
+        InsertIntoMap(data, spellMap);
+        return true;
+	}
 
+    return false;
 }
 
 bool Manager::InsertIntoFocusMap(ItemData& data)
 {
+    switch (data.insertFormType)
+	{
+    case Data::ITEM_FORM_TYPE:
+    case Data::LEVELED_ITEM_FORM_TYPE:
+        InsertIntoMap(data, itemLeveledMap);
+        return true;
+    case Data::NPC_FORM_TYPE:
+    case Data::LEVELED_NPC_FORM_TYPE:
+        InsertIntoMap(data, npcLeveledMap);
+        return true;
+    case Data::SPELL_FORM_TYPE:
+    case Data::LEVELED_SPELL_FORM_TYPE:
+        InsertIntoMap(data, spellLeveledMap);
+        return true;
+	}
 
+    return false;
+}
+
+bool Manager::InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map)
+{
+    if (map.count(data.targetForm->formID) == 0)
+    {
+        map.emplace(data.targetForm->formID, std::vector<ItemData>());
+        map.at(data.targetForm->formID).emplace_back(data);
+
+        ++totalTargetSize;
+        ++totalDataSize;
+
+        return true;
+    }
+    else
+    {
+        map.at(data.targetForm->formID).emplace_back(data);
+
+        ++totalDataSize;
+
+        return true;
+    }
+
+    return false;
 }

@@ -244,11 +244,6 @@ bool Utility::AcquireRangeData(std::string &value, std::uint16_t &min,
     return false;
 }
 
-bool Utility::CheckForLeveledList()
-{
-    return false;
-}
-
 void Utility::SanitizeLeveledListArray(RE::SimpleArray<RE::LEVELED_OBJECT> &entries)
 {
     const auto size = entries.size();
@@ -260,6 +255,7 @@ void Utility::SanitizeLeveledListArray(RE::SimpleArray<RE::LEVELED_OBJECT> &entr
     }
 }
 
+// refactor
 void Utility::SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT> &entries)
 {
     const auto size = entries.size();

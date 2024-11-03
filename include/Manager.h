@@ -18,6 +18,7 @@ public:
     bool DirectProtocol(ItemData& data);
     bool InsertIntoBatchMap(ItemData& data);
     bool InsertIntoFocusMap(ItemData& data);
+    bool InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
 
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
