@@ -20,6 +20,10 @@ public:
     bool InsertIntoFocusMap(ItemData& data);
     bool InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
 
+    // Note that insertBufferElements and originalBufferElements are not capacity,
+    // Data::MAX_ENTRY_SIZE (255) will be both array max capacity
+    bool ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, RE::LEVELED_OBJECT* insertBuffer, std::size_t& originalBufferElements, RE::LEVELED_OBJECT* originalBuffer);
+
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
     std::unordered_map<RE::FormID, std::vector<ItemData>> itemMap;
@@ -37,12 +41,15 @@ public:
 
     std::size_t uniqueLeveledItemInserts = 0;
     std::size_t totalLeveledItemInserts = 0;
+    std::size_t totalLeveledItemChanceSkips = 0;
 
     std::size_t uniqueLeveledNPCInserts = 0;
     std::size_t totalLeveledNPCInserts = 0;
+    std::size_t totalLeveledNPCChanceSkips = 0;
 
     std::size_t uniqueLeveledSpellInserts = 0;
     std::size_t totalLeveledSpellInserts = 0;
+    std::size_t totalLeveledSpellChanceSkips = 0;
 
     std::size_t totalTargetSize = 0;
     std::size_t totalDataSize = 0;

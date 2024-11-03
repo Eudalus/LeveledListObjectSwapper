@@ -189,12 +189,18 @@ bool Manager::ProcessLeveledItem()
     std::vector<RE::LEVELED_OBJECT> insertItems;
     insertItems.reserve(Data::MAX_ENTRY_SIZE);
 
+    RE::LEVELED_OBJECT originalBuffer[Data::MAX_ENTRY_SIZE];
+    RE::LEVELED_OBJECT insertBuffer[Data::MAX_ENTRY_SIZE];
+
+    // not to be confused with capacity
+    size_t originalBufferElements = 0;
+    size_t insertBufferElements = 0;
+
     std::srand(std::time(NULL));
 
     std::default_random_engine randomEngine;
-    std::uniform_real_distribution<float> randomDistributor(0.0f, 100.0f);
+    std::uniform_real_distribution<float> randomDistributor(0.0f, 99.99f);
 
-    //randomDistributor(randomEngine)
     // check for leveled list targets
 
     // check list entries for batch inserts
@@ -202,7 +208,7 @@ bool Manager::ProcessLeveledItem()
     {
         RE::TESLevItem *currentList = lists[i] ? lists[i]->As<RE::TESLevItem>() : nullptr;
 
-        if (currentList && (currentList->numEntries < Data::MAX_ENTRY_SIZE))
+        if (currentList && (currentList->numEntries < Data::MAX_ENTRY_SIZE)) // remove size check here, will interfer with removal or swap
         {
             shouldInsert = false;
             ongoing = true;
@@ -224,23 +230,32 @@ bool Manager::ProcessLeveledItem()
 
                         if (currentItemsSize > 0)
                         {
-                            shouldInsert = true;
                             insertItemsSize = insertItems.size();
 
                             for (size_t k = 0; k < currentItemsSize && ((insertItemsSize + oldListSize) < Data::MAX_ENTRY_SIZE) && ongoing; ++k)
                             {
-                                auto insertForm = currentItems[k].insertForm;
-
-                                if (insertForm && currentList->GetCanContainFormsOfType(insertForm->GetFormType()))
+                                if (randomDistributor(randomEngine) < currentItems[k].chance)
                                 {
-                                    // store pointer on ItemData to insert directly to reduce lookup?
-                                    insertItems.emplace_back(RE::LEVELED_OBJECT(insertForm, (rand() % (currentItems[k].maxCount - currentItems[k].minCount + 1)) + currentItems[k].minCount, (rand() % (currentItems[k].maxLevel - currentItems[k].minLevel + 1)) + currentItems[k].minLevel, 0, nullptr));
-                                    insertItemsSize = insertItems.size();
-                                    if (insertItemsSize + oldListSize >= Data::MAX_ENTRY_SIZE)
+
+                                    // handle protocol here
+
+                                    auto insertForm = currentItems[k].insertForm;
+
+                                    if (insertForm)// && currentList->GetCanContainFormsOfType(insertForm->GetFormType()))
                                     {
-                                        // won't be able to insert more items into list, lets 2nd level for loop terminate early
-                                        ongoing = false;
+                                        insertItems.emplace_back(RE::LEVELED_OBJECT(insertForm, (rand() % (currentItems[k].maxCount - currentItems[k].minCount + 1)) + currentItems[k].minCount, (rand() % (currentItems[k].maxLevel - currentItems[k].minLevel + 1)) + currentItems[k].minLevel, 0, nullptr));
+                                        insertItemsSize = insertItems.size();
+                                        shouldInsert = true;
+                                        if (insertItemsSize + oldListSize >= Data::MAX_ENTRY_SIZE)
+                                        {
+                                            // won't be able to insert more items into list, lets 2nd level for loop terminate early
+                                            ongoing = false;
+                                        }
                                     }
+                                }
+                                else
+                                {
+                                    ++totalLeveledItemChanceSkips;
                                 }
                             }
                         }
@@ -312,6 +327,7 @@ bool Manager::ProcessLeveledItem()
 
     logger::info("{} unique leveled item lists inserted into", uniqueLeveledItemInserts);
     logger::info("{} total insertions into leveled item lists", totalLeveledItemInserts);
+    logger::info("{} total leveled item inserts randomly chance skipped", totalLeveledItemChanceSkips);
 
     return false;
 }
@@ -499,4 +515,21 @@ bool Manager::InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::
     }
 
     return false;
+}
+
+/// <summary>
+/// Checks data's protocol and processes it into a LEVELED_OBJECT for insertion into insertBuffer
+/// and/or keeps originalObject by moving its data into originalBuffer
+/// or allows originalObject to be removed when its leveled list is resized
+/// </summary>
+/// <param name="data"> The data to insert or determine if originalObject should be removed when the leveled list will resize </param>
+/// <param name="originalObject"> the original object in the leveled list that matched into the map. Will be placed into originalBufferElements if the data's protocol allows it </param>
+/// <param name="insertBufferElements"> number of elements in insertBuffer, not to be confused with max capacity (255) </param>
+/// <param name="insertBuffer"> array of LEVELED_OBJECTS that will receive LEVELED_OBJECT data based on data if data's protocol is for insert </param>
+/// <param name="originalBufferElements"> number of elements in originalBuffer, not to be confused with max capacity (255) </param>
+/// <param name="originalBuffer"> array of LEVELED_OBJECTS that will receive originalObject if data's protocol doesn't remove originalObject </param>
+/// <returns> true if an insertion or removal occurred, otherwise false </returns>
+bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, RE::LEVELED_OBJECT* insertBuffer, std::size_t& originalBufferElements, RE::LEVELED_OBJECT* originalBuffer)
+{
+    
 }
