@@ -21,8 +21,8 @@ public:
     bool InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
 
     // Note that insertBufferElements and originalBufferElements are not capacity,
-    // Data::MAX_ENTRY_SIZE (255) will be both array max capacity
-    bool ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, RE::LEVELED_OBJECT* insertBuffer, std::size_t& originalBufferElements, RE::LEVELED_OBJECT* originalBuffer);
+    // Data::MAX_ENTRY_SIZE (255) will be array max capacity
+    bool ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, RE::LEVELED_OBJECT* insertBuffer, bool& keepOriginal);
 
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
