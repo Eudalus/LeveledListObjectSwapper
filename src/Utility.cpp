@@ -274,10 +274,10 @@ void Utility::SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT> &e
             }
         }
 
-        entries[i].itemExtra = nullptr;
+        //entries[i].itemExtra = nullptr;
     }
 
-    //SanitizeLeveledListArray(entries);
+    SanitizeLeveledListArray(entries);
 }
 
 /// <summary>

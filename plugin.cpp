@@ -86,6 +86,11 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	}
     else if (a_message->type == SKSE::MessagingInterface::kDataLoaded)
     {
+        /*
+        std::chrono::time_point<std::chrono::system_clock> start, end;
+
+        start = std::chrono::system_clock::now();
+        */
         Manager manager;
 
         if (manager.LoadData())
@@ -103,6 +108,12 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 manager.ProcessLeveledSpell();
             }
         }
+        /*
+        end = std::chrono::system_clock::now();
+
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        logger::info("{} ELAPSED TIME", elapsed_seconds.count());
+        */
     }
 }
 

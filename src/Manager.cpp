@@ -231,9 +231,8 @@ bool Manager::ProcessLeveledItem()
                             {
                                 if (randomDistributor(randomEngine) < currentItems[k].chance)
                                 {
-                                    if (ProcessBatchProtocol(currentItems[k], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal))
+                                    if (ProcessBatchProtocol(currentItems[k], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal, resetVector))
                                     {
-                                        resetVector.push_back(&currentItems[k]);
                                         resizePending = true;
                                     }
 
@@ -288,18 +287,23 @@ bool Manager::ProcessLeveledItem()
 
                 resetVectorSize = resetVector.size();
 
-                // reset process counters for next loop
-                for (size_t m = 0; m < resetVectorSize; ++m)
+                if (resetVectorSize > 0)
                 {
-                    resetVector[m]->processCounter = 1; // doesn't need to be set to Data::MAX_ENTRY_SIZE for multi since protocol doesn't decrement them
+                    // reset process counters for next loop
+                    for (size_t m = 0; m < resetVectorSize; ++m)
+                    {
+                        resetVector[m]->processCounter = 1;
+                    }
+
+                    resetVector.clear();
+                    resetVector.reserve(Data::MAX_ENTRY_SIZE);
                 }
 
                 ++uniqueLeveledItemModified;
                 totalLeveledItemInserts += insertBufferElements;
                 totalLeveledItemRemovals += oldListSize - originalBufferElements;
-
+                
                 /*
-
                 logger::info("{} OLD LIST SIZE", oldListSize);
                 logger::info("{} NEW LIST SIZE", newListSize);
 
@@ -501,7 +505,7 @@ bool Manager::InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::
 /// <param name="insertBuffer"> array of LEVELED_OBJECTS that will receive LEVELED_OBJECT data based on data if data's protocol is for insert </param>
 /// <param name="keepOriginal"> will be set to false if a protocol wants the original object removed, otherwise retains passed value </param>
 /// <returns> true if an insertion or removal occurred, otherwise false </returns>
-bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal)
+bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal, std::vector<ItemData*>& resetVector)
 {
     switch (data.protocol)
 	{
@@ -514,6 +518,7 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
 
             ++insertBufferElements;
             return true;
@@ -524,6 +529,7 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
             
             ++insertBufferElements;
             return true;
@@ -534,6 +540,7 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
             insertBuffer[insertBufferElements].level = originalObject.level;
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
 
             ++insertBufferElements;
             return true;
@@ -544,6 +551,7 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
             insertBuffer[insertBufferElements].level = originalObject.level;
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
 
             ++insertBufferElements;
             return true;
@@ -588,6 +596,7 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
 
             ++insertBufferElements;
 
@@ -600,6 +609,7 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
 
             ++insertBufferElements;
 
@@ -612,6 +622,7 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
             insertBuffer[insertBufferElements].level = originalObject.level;
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
 
             ++insertBufferElements;
 
@@ -624,6 +635,7 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
             insertBuffer[insertBufferElements].level = originalObject.level;
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
 
             ++insertBufferElements;
 
@@ -632,6 +644,8 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
         case Data::VALID_SINGLE_PROTOCOL_NO_INSERT_REMOVE:
 
             data.processCounter = 0;
+            resetVector.push_back(&data);
+
             keepOriginal = false;
             return true;
         // 150-199
