@@ -251,7 +251,7 @@ void Utility::SanitizeLeveledListArray(RE::SimpleArray<RE::LEVELED_OBJECT> &entr
     for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type i = 0; i < size; ++i)
     {
         entries[i].itemExtra = nullptr;
-        entries[i].pad0C = 0;
+        //entries[i].pad0C = 0;
     }
 }
 
@@ -273,9 +273,11 @@ void Utility::SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT> &e
 
             }
         }
+
+        entries[i].itemExtra = nullptr;
     }
 
-    SanitizeLeveledListArray(entries);
+    //SanitizeLeveledListArray(entries);
 }
 
 /// <summary>

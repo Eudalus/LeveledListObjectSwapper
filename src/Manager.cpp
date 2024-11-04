@@ -17,7 +17,6 @@ bool Manager::LoadData()
     const std::string DEFAULT_LEVEL_STRING = "1";
     const std::string DEFAULT_CHANCE_STRING = "100.0";
     const std::string DEFAULT_PROTOCOL_STRING = "0";
-    const std::string DEFAULT_PRIORITY_STRING = "1000";
     const std::string DEFAULT_USE_ALL_STRING = "0";
 
     const unsigned int DEFAULT_COUNT_VALUE = 1;
@@ -26,7 +25,6 @@ bool Manager::LoadData()
     const float DEFAULT_CHANCE_MIN = 0.0f;
     const float DEFAULT_CHANCE_MAX = 100.0f;
     const unsigned int DEFAULT_PROTOCOL_VALUE = 0;
-    const unsigned int DEFAULT_PRIORITY_VALUE = 1000;
     const unsigned int DEFAULT_USE_ALL_VALUE = 0;
 
     constexpr auto suffix = "_LLOS"sv;
@@ -145,12 +143,6 @@ bool Manager::LoadData()
                 Utility::StringToFloat(chanceString, DEFAULT_CHANCE_VALUE),
                 DEFAULT_CHANCE_MIN, DEFAULT_CHANCE_MAX);
 
-            Utility::GetIniValue(ini, priorityString, section, "Priority",
-                              DEFAULT_PRIORITY_STRING);
-            logger::info("Priority: {}", priorityString);
-
-            currentData.priority = Utility::StringToUnInt(priorityString, DEFAULT_PRIORITY_VALUE);
-
             Utility::GetIniValue(ini, useAllString, section, "UseAll",
                               DEFAULT_USE_ALL_STRING);
             logger::info("UseAll: {}", useAllString);
@@ -170,8 +162,6 @@ bool Manager::LoadData()
 
     logger::info("{:*^30}", "INFO");
 
-    SortMapData();
-
     return totalDataSize >= 1;
 }
 
@@ -182,26 +172,28 @@ bool Manager::ProcessLeveledItem()
     
     const RE::BSTArrayBase::size_type numberOfLists = lists.size();
 
-    RE::SimpleArray<RE::LEVELED_OBJECT>::size_type oldListSize, newListSize;
-    std::size_t currentItemsSize, insertItemsSize;
-    bool shouldInsert, ongoing;
-    bool resizePending;
-    bool keepOriginal;
-    
-    std::vector<RE::LEVELED_OBJECT> insertItems;
-    insertItems.reserve(Data::MAX_ENTRY_SIZE);
-
-    RE::LEVELED_OBJECT originalBuffer[Data::MAX_ENTRY_SIZE];
-    RE::LEVELED_OBJECT insertBuffer[Data::MAX_ENTRY_SIZE];
+    SmallerLeveledObject originalBuffer[Data::MAX_ENTRY_SIZE];
+    SmallerLeveledObject insertBuffer[Data::MAX_ENTRY_SIZE];
 
     // not to be confused with capacity
     size_t originalBufferElements = 0;
     size_t insertBufferElements = 0;
+    std::vector<ItemData*> resetVector;
+    resetVector.reserve(Data::MAX_ENTRY_SIZE);
 
-    std::srand(std::time(NULL));
+    size_t oldListSize;
+    size_t newListSize;
+    size_t currentItemsSize;
+    size_t resetVectorSize;
 
     std::default_random_engine randomEngine;
     std::uniform_real_distribution<float> randomDistributor(0.0f, 99.99f);
+
+    bool ongoing;
+    bool resizePending;
+    bool keepOriginal;
+
+    std::srand(std::time(NULL));
 
     // check for leveled list targets
 
@@ -210,63 +202,50 @@ bool Manager::ProcessLeveledItem()
     {
         RE::TESLevItem *currentList = lists[i] ? lists[i]->As<RE::TESLevItem>() : nullptr;
 
-        if (currentList && (currentList->numEntries < Data::MAX_ENTRY_SIZE)) // remove size check here, will interfere with removal or swap
+        if (currentList)
         {
-            shouldInsert = false;
+            originalBufferElements = 0;
+            insertBufferElements = 0;
             ongoing = true;
             resizePending = false;
 
             RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = currentList->entries;
-            oldListSize = currentEntries.size();
+            oldListSize = std::min((size_t)currentList->numEntries, currentEntries.size()); // guaranteed to be Data::MAX_ENTRY_SIZE (255) or lower because currentList->numEntries is an unsigned byte with max value 0xFF (255)
 
-            for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type j = 0; j < oldListSize && ongoing; ++j)
+            for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type j = 0; (j < oldListSize) && ongoing; ++j)
             {
                 keepOriginal = true;
                 auto currentForm = currentEntries[j].form;
 
                 if (currentForm)
                 {
-                    if (auto mapIterator = itemMap.find(currentForm->formID); mapIterator != itemMap.end()) // if statement variable declaration is cruise control for cool
+                    if (auto mapIterator = itemMap.find(currentForm->formID); mapIterator != itemMap.end())
                     {
-                        std::vector<ItemData> &currentItems = mapIterator->second;
+                        std::vector<ItemData>& currentItems = mapIterator->second;
 
                         currentItemsSize = std::min(currentItems.size(), Data::MAX_ENTRY_SIZE);
 
-                        if (currentItemsSize > 0)
+                        for (size_t k = 0; (k < currentItemsSize) && ongoing; ++k)
                         {
-                            insertItemsSize = insertItems.size();
-
-                            // use buffer elements instead
-                            for (size_t k = 0; k < currentItemsSize && ((insertItemsSize + oldListSize) < Data::MAX_ENTRY_SIZE) && ongoing; ++k)
+                            if (currentItems[k].processCounter > 0)
                             {
-                                if (currentItems[k].processCounter > 0)
+                                if (randomDistributor(randomEngine) < currentItems[k].chance)
                                 {
-                                    if (randomDistributor(randomEngine) < currentItems[k].chance)
+                                    if (ProcessBatchProtocol(currentItems[k], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal))
                                     {
-                                        // handle protocol here
-                                        if (ProcessProtocol(currentItems[k], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal))
-                                        {
-                                            resizePending = true;
-                                        }
-
-                                        auto insertForm = currentItems[k].insertForm;
-
-                                        if (insertForm)// && currentList->GetCanContainFormsOfType(insertForm->GetFormType()))
-                                        {
-                                            insertItems.emplace_back(RE::LEVELED_OBJECT(insertForm, (rand() % (currentItems[k].maxCount - currentItems[k].minCount + 1)) + currentItems[k].minCount, (rand() % (currentItems[k].maxLevel - currentItems[k].minLevel + 1)) + currentItems[k].minLevel, 0, nullptr));
-                                            insertItemsSize = insertItems.size();
-                                            shouldInsert = true;
-                                            if (insertItemsSize + oldListSize >= Data::MAX_ENTRY_SIZE)
-                                            {
-                                                // won't be able to insert more items into list, lets 2nd level for loop terminate early
-                                                ongoing = false;
-                                            }
-                                        }
+                                        resetVector.push_back(&currentItems[k]);
+                                        resizePending = true;
                                     }
-                                    else
+
+                                    if (insertBufferElements >= Data::MAX_ENTRY_SIZE)
                                     {
-                                        ++totalLeveledItemChanceSkips;
+                                        // won't be able to insert more items into list, lets 2nd level for loop terminate early
+                                        ongoing = false;
                                     }
+                                }
+                                else
+                                {
+                                    ++totalLeveledItemChanceSkips;
                                 }
                             }
                         }
@@ -276,49 +255,50 @@ bool Manager::ProcessLeveledItem()
                 if (keepOriginal)
                 {
                     // copy original object data into originalBuffer[originalBufferElements]
-                    // ++originalBufferElements;
+                    originalBuffer[originalBufferElements].form = currentEntries[j].form;
+                    originalBuffer[originalBufferElements].count = currentEntries[j].count;
+                    originalBuffer[originalBufferElements].level = currentEntries[j].level;
+
+                    ++originalBufferElements;
                 }
             }
 
-            // change to resizePending, don't use insertItems size check
-            if (shouldInsert && (!insertItems.empty())) // if true, target item found. resize and insert
+            if (resizePending)
             {
-                insertItemsSize = insertItems.size(); // paranoid insurance
-
                 // newListSize guaranteed 255 or less
-                newListSize = std::clamp(oldListSize + insertItemsSize, (std::size_t)0, Data::MAX_ENTRY_SIZE);
+                newListSize = std::min(originalBufferElements + insertBufferElements, Data::MAX_ENTRY_SIZE);
+
+                if (newListSize == 0)
+                {
+                    // currentEntries.resize(0)
+                    currentEntries.clear();
+                }
+                else
+                {
+                    currentEntries.resize(newListSize);
+
+                    // insert data from originalBuffer and insertBuffer to leveled list entries
+                    InsertLeveledListBuffers(insertBufferElements, insertBuffer, originalBufferElements, originalBuffer, currentEntries, newListSize);
+
+                    // need to sort by level and null extra data pointers
+                    Utility::SortLeveledListArrayByLevel(currentEntries);
+                }
 
                 currentList->numEntries = newListSize;
 
-                // should handle reallocating and moving existing data
-                currentEntries.resize(newListSize);
+                resetVectorSize = resetVector.size();
 
-                // insert data from insertItems to leveled list entries
-                for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type m = oldListSize, z = 0; m < newListSize; ++m, ++z) // add (&& z < insertItems.size()) to condition ?
+                // reset process counters for next loop
+                for (size_t m = 0; m < resetVectorSize; ++m)
                 {
-                    auto& appendForm = currentEntries[m];
-                    auto& itemForm = insertItems[z];
-
-                    appendForm.count = itemForm.count;
-                    appendForm.level = itemForm.level;
-                    appendForm.form = itemForm.form;
-                    //appendForm.itemExtra = itemForm.itemExtra;
+                    resetVector[m]->processCounter = 1; // doesn't need to be set to Data::MAX_ENTRY_SIZE for multi since protocol doesn't decrement them
                 }
 
-                totalLeveledItemInserts += insertItemsSize;
-                ++uniqueLeveledItemInserts;
+                ++uniqueLeveledItemModified;
+                totalLeveledItemInserts += insertBufferElements;
+                totalLeveledItemRemovals += oldListSize - originalBufferElements;
 
-                // prepare for next list
-                insertItems.clear();
-                //insertItemsSize = 0; // unnecessary, will reassign before usage
-                insertItems.reserve(Data::MAX_ENTRY_SIZE);
-
-                Utility::SortLeveledListArrayByLevel(currentEntries);
-
-                // reset process counters for next loop here
-                // 
-
-
+                /*
 
                 logger::info("{} OLD LIST SIZE", oldListSize);
                 logger::info("{} NEW LIST SIZE", newListSize);
@@ -344,12 +324,14 @@ bool Manager::ProcessLeveledItem()
                    
                     logger::info("{} --- COMPLETE", debugIterator);
                 }
+                */
             }
         }
     }
 
-    logger::info("{} unique leveled item lists inserted into", uniqueLeveledItemInserts);
-    logger::info("{} total insertions into leveled item lists", totalLeveledItemInserts);
+    logger::info("{} unique leveled item lists modified", uniqueLeveledItemModified);
+    logger::info("{} total leveled item list insertions", totalLeveledItemInserts);
+    logger::info("{} total leveled item lists removals", totalLeveledItemRemovals);
     logger::info("{} total leveled item inserts randomly chance skipped", totalLeveledItemChanceSkips);
 
     return false;
@@ -369,39 +351,6 @@ bool Manager::ProcessLeveledSpell()
     const auto& lists = dataHandler->GetFormArray(RE::FormType::LeveledSpell);
 
     return false;
-}
-
-void Manager::SortMapData()
-{
-    for (auto& [key, value] : itemMap)
-    {
-        std::sort(value.begin(), value.end());
-    }
-
-    for (auto& [key, value] : npcMap)
-    {
-        std::sort(value.begin(), value.end());
-    }
-
-    for (auto& [key, value] : spellMap)
-    {
-        std::sort(value.begin(), value.end());
-    }
-
-    for (auto& [key, value] : itemLeveledMap)
-    {
-        std::sort(value.begin(), value.end());
-    }
-
-    for (auto& [key, value] : npcLeveledMap)
-    {
-        std::sort(value.begin(), value.end());
-    }
-
-    for (auto& [key, value] : spellLeveledMap)
-    {
-        std::sort(value.begin(), value.end());
-    }
 }
 
 bool Manager::DirectProtocol(ItemData& data)
@@ -518,7 +467,7 @@ bool Manager::InsertIntoFocusMap(ItemData& data)
 
 bool Manager::InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map)
 {
-    if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end()) // if statement variable declaration is cruise control for cool
+    if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
     {
         mapIterator->second.emplace_back(data);
 
@@ -550,10 +499,9 @@ bool Manager::InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::
 /// <param name="originalObject"> the original object in the leveled list that matched into the map. Will be placed into originalBufferElements if the data's protocol allows it </param>
 /// <param name="insertBufferElements"> number of elements in insertBuffer, not to be confused with max capacity (255) </param>
 /// <param name="insertBuffer"> array of LEVELED_OBJECTS that will receive LEVELED_OBJECT data based on data if data's protocol is for insert </param>
-/// <param name="originalBufferElements"> number of elements in originalBuffer, not to be confused with max capacity (255) </param>
-/// <param name="originalBuffer"> array of LEVELED_OBJECTS that will receive originalObject if data's protocol doesn't remove originalObject </param>
+/// <param name="keepOriginal"> will be set to false if a protocol wants the original object removed, otherwise retains passed value </param>
 /// <returns> true if an insertion or removal occurred, otherwise false </returns>
-bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, RE::LEVELED_OBJECT* insertBuffer, bool& keepOriginal)
+bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal)
 {
     switch (data.protocol)
 	{
@@ -561,12 +509,9 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
         // 0-49
 		case Data::VALID_SINGLE_PROTOCOL_INSERT_BASIC:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
-            // check extra data
-            // check originalObject extra data and use on insert?
 
             data.processCounter = 0;
 
@@ -574,12 +519,9 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
             return true;
         case Data::VALID_SINGLE_PROTOCOL_INSERT_BASIC_COUNT:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = originalObject.count;
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
-            // check extra data
-            // check originalObject extra data and use on insert?
 
             data.processCounter = 0;
             
@@ -587,12 +529,9 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
             return true;
         case Data::VALID_SINGLE_PROTOCOL_INSERT_BASIC_LEVEL:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
             insertBuffer[insertBufferElements].level = originalObject.level;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
-            // check extra data
-            // check originalObject extra data and use on insert?
 
             data.processCounter = 0;
 
@@ -600,12 +539,9 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
             return true;
         case Data::VALID_SINGLE_PROTOCOL_INSERT_BASIC_COUNT_LEVEL:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = originalObject.count;
             insertBuffer[insertBufferElements].level = originalObject.level;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
-            // check extra data
-            // check originalObject extra data and use on insert?
 
             data.processCounter = 0;
 
@@ -614,54 +550,42 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
         // 50-99
         case Data::VALID_MULTI_PROTOCOL_INSERT_BASIC:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
-            // check extra data
-            // check originalObject extra data and use on insert?
 
             ++insertBufferElements;
             return true;
         case Data::VALID_MULTI_PROTOCOL_INSERT_BASIC_COUNT:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = originalObject.count;
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
-            // check extra data
-            // check originalObject extra data and use on insert?
 
             ++insertBufferElements;
             return true;
         case Data::VALID_MULTI_PROTOCOL_INSERT_BASIC_LEVEL:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
             insertBuffer[insertBufferElements].level = originalObject.level;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
-            // check extra data
-            // check originalObject extra data and use on insert?
 
             ++insertBufferElements;
             return true;
         case Data::VALID_MULTI_PROTOCOL_INSERT_BASIC_COUNT_LEVEL:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = originalObject.count;
             insertBuffer[insertBufferElements].level = originalObject.level;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
-            // check extra data
-            // check originalObject extra data and use on insert?
 
             ++insertBufferElements;
             return true;
         // 100-149
         case Data::VALID_SINGLE_PROTOCOL_REMOVE_BASIC:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
-            insertBuffer[insertBufferElements].form = data.insertForm;
 
             data.processCounter = 0;
 
@@ -671,9 +595,9 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
             return true;
         case Data::VALID_SINGLE_PROTOCOL_REMOVE_BASIC_COUNT:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = originalObject.count;
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
-            insertBuffer[insertBufferElements].form = data.insertForm;
 
             data.processCounter = 0;
 
@@ -683,9 +607,9 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
             return true;
         case Data::VALID_SINGLE_PROTOCOL_REMOVE_BASIC_LEVEL:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
             insertBuffer[insertBufferElements].level = originalObject.level;
-            insertBuffer[insertBufferElements].form = data.insertForm;
 
             data.processCounter = 0;
 
@@ -695,9 +619,9 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
             return true;
         case Data::VALID_SINGLE_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = originalObject.count;
             insertBuffer[insertBufferElements].level = originalObject.level;
-            insertBuffer[insertBufferElements].form = data.insertForm;
 
             data.processCounter = 0;
 
@@ -713,9 +637,9 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
         // 150-199
         case Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
-            insertBuffer[insertBufferElements].form = data.insertForm;
 
             ++insertBufferElements;
 
@@ -723,29 +647,29 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
             return true;
         case Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = originalObject.count;
             insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
+            
             ++insertBufferElements;
 
             keepOriginal = false;
             return true;
         case Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_LEVEL:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
             insertBuffer[insertBufferElements].level = originalObject.level;
-            insertBuffer[insertBufferElements].form = data.insertForm;
-
+            
             ++insertBufferElements;
 
             keepOriginal = false;
             return true;
         case Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL:
             // insert data
+            insertBuffer[insertBufferElements].form = data.insertForm;
             insertBuffer[insertBufferElements].count = originalObject.count;
             insertBuffer[insertBufferElements].level = originalObject.level;
-            insertBuffer[insertBufferElements].form = data.insertForm;
 
             ++insertBufferElements;
 
@@ -754,6 +678,7 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
         case Data::VALID_MULTI_PROTOCOL_NO_INSERT_REMOVE:
             keepOriginal = false;
             return true;
+        // move to ProcessFocusProtocol
         // ----- FOCUS MAPS -----
         // 200-249
         
@@ -764,22 +689,23 @@ bool Manager::ProcessProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject
         // 350-399
 	}
 
-    /*
-    auto insertForm = currentItems[k].insertForm;
-
-    if (insertForm)// && currentList->GetCanContainFormsOfType(insertForm->GetFormType()))
-    {
-        insertItems.emplace_back(RE::LEVELED_OBJECT(insertForm, (rand() % (currentItems[k].maxCount - currentItems[k].minCount + 1)) + currentItems[k].minCount, (rand() % (currentItems[k].maxLevel - currentItems[k].minLevel + 1)) + currentItems[k].minLevel, 0, nullptr));
-        insertItemsSize = insertItems.size();
-        shouldInsert = true;
-        if (insertItemsSize + oldListSize >= Data::MAX_ENTRY_SIZE)
-        {
-            // won't be able to insert more items into list, lets 2nd level for loop terminate early
-            ongoing = false;
-        }
-    }
-    */
-
     ++wrongDataCounter;
     return false;
+}
+
+void Manager::InsertLeveledListBuffers(const std::size_t insertBufferElements, SmallerLeveledObject* insertBuffer, const std::size_t originalBufferElements, SmallerLeveledObject* originalBuffer, RE::SimpleArray<RE::LEVELED_OBJECT>& entries, const std::size_t entriesCapacity)
+{
+    for (size_t i = 0; i < originalBufferElements; ++i) // shouldn't need entriesCapacity check
+    {
+        entries[i].form = originalBuffer[i].form;
+        entries[i].count = originalBuffer[i].count;
+        entries[i].level = originalBuffer[i].level;
+    }
+
+    for (size_t j = 0; (j < insertBufferElements) && ((j + originalBufferElements) < entriesCapacity); ++j)
+    {
+        entries[(j + originalBufferElements)].form = insertBuffer[j].form;
+        entries[(j + originalBufferElements)].count = insertBuffer[j].count;
+        entries[(j + originalBufferElements)].level = insertBuffer[j].level;
+    }
 }

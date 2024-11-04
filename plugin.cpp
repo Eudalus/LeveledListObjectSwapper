@@ -102,27 +102,6 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             {
                 manager.ProcessLeveledSpell();
             }
-
-            /*
-            // const RE::BSTArray<RE::TESLevItem*>& lists
-            const auto& lists =
-            dataHandler->GetFormArray(RE::FormType::LeveledItem);
-
-            logger::info("{} Leveled Items in form array", lists.size());
-
-            const auto first = lists[0]->As<RE::TESLevItem>();
-
-            const int size = first->numEntries;
-
-            for (int i = 0; i < size; ++i)
-            {
-                logger::info("ENTRY: {} --- FORM ID: {} --- EDITOR ID: {} ---
-            COUNT: {} --- LEVEL: {}", (i + 1), std::format("{:x}",
-            first->entries[i].form->formID),
-                    first->entries[i].form->GetFormEditorID(),
-                    first->entries[i].count, first->entries[i].level);
-            }
-            */
         }
     }
 }
