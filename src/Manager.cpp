@@ -366,44 +366,37 @@ bool Manager::DirectProtocol(ItemData& data)
         if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_MAX))
         {
             data.processCounter = 1;
-            InsertIntoBatchMap(data);
-            return true;
+            return InsertIntoBatchMap(data);
         }
         else if ((protocol >= Data::VALID_MULTI_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_INSERT_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
-            InsertIntoBatchMap(data);
-            return true;
+            return InsertIntoBatchMap(data);
         }
         else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_REMOVE_MAX))
         {
             data.processCounter = 1;
-            InsertIntoBatchMap(data);
-            return true;
+            return InsertIntoBatchMap(data);
         }
         else if ((protocol >= Data::VALID_MULTI_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_REMOVE_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
-            InsertIntoBatchMap(data);
-            return true;
+            return InsertIntoBatchMap(data);
         }
         else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MAX))
         {
             data.processCounter = 1;
-            InsertIntoFocusMap(data);
-            return true;
+            return InsertIntoFocusMapAdd(data);
         }
         else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX))
         {
             data.processCounter = 1;
-            InsertIntoFocusMap(data);
-            return true;
+            return InsertIntoFocusMapRemove(data);
         }
         else if ((protocol >= Data::VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
-            InsertIntoFocusMap(data);
-            return true;
+            return InsertIntoFocusMapRemove(data);
         }
     }
     else // form types are not compatible
@@ -413,13 +406,13 @@ bool Manager::DirectProtocol(ItemData& data)
         switch (protocol)
 	    {
 		case Data::VALID_SINGLE_PROTOCOL_NO_INSERT_REMOVE:
+
             data.processCounter = 1;
-            InsertIntoBatchMap(data);
-            return true;
+            return InsertIntoBatchMap(data);
         case Data::VALID_MULTI_PROTOCOL_NO_INSERT_REMOVE:
+
             data.processCounter = Data::MAX_ENTRY_SIZE;
-            InsertIntoBatchMap(data);
-            return true;
+            return InsertIntoBatchMap(data);
 	    }
     }
 
@@ -433,43 +426,61 @@ bool Manager::InsertIntoBatchMap(ItemData& data)
 	{
     case Data::ITEM_FORM_TYPE:
     case Data::LEVELED_ITEM_FORM_TYPE:
-        InsertIntoMap(data, itemMap);
-        return true;
+        
+        return InsertIntoCommonMap(data, itemMap);
     case Data::NPC_FORM_TYPE:
     case Data::LEVELED_NPC_FORM_TYPE:
-        InsertIntoMap(data, npcMap);
-        return true;
+        
+        return InsertIntoCommonMap(data, npcMap);
     case Data::SPELL_FORM_TYPE:
     case Data::LEVELED_SPELL_FORM_TYPE:
-        InsertIntoMap(data, spellMap);
-        return true;
+        
+        return InsertIntoCommonMap(data, spellMap);
 	}
 
+    ++removedDataCounter;
     return false;
 }
 
-bool Manager::InsertIntoFocusMap(ItemData& data)
+bool Manager::InsertIntoFocusMapAdd(ItemData& data)
 {
-    switch (data.insertFormType)
+    switch (data.targetFormType)
 	{
-    case Data::ITEM_FORM_TYPE:
     case Data::LEVELED_ITEM_FORM_TYPE:
-        InsertIntoMap(data, itemLeveledMap);
-        return true;
-    case Data::NPC_FORM_TYPE:
+        
+        return InsertIntoWeirdMapAdd(data, itemLeveledHybridMap);
     case Data::LEVELED_NPC_FORM_TYPE:
-        InsertIntoMap(data, npcLeveledMap);
-        return true;
-    case Data::SPELL_FORM_TYPE:
+        
+        return InsertIntoWeirdMapAdd(data, npcLeveledHybridMap);
     case Data::LEVELED_SPELL_FORM_TYPE:
-        InsertIntoMap(data, spellLeveledMap);
-        return true;
+        
+        return InsertIntoWeirdMapAdd(data, spellLeveledHybridMap);
 	}
 
+    ++removedDataCounter;
     return false;
 }
 
-bool Manager::InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map)
+bool Manager::InsertIntoFocusMapRemove(ItemData& data)
+{
+    switch (data.targetFormType)
+	{
+    case Data::LEVELED_ITEM_FORM_TYPE:
+        
+        return InsertIntoWeirdMapRemove(data, itemLeveledHybridMap);
+    case Data::LEVELED_NPC_FORM_TYPE:
+        
+        return InsertIntoWeirdMapRemove(data, npcLeveledHybridMap);
+    case Data::LEVELED_SPELL_FORM_TYPE:
+        
+        return InsertIntoWeirdMapRemove(data, spellLeveledHybridMap);
+	}
+
+    ++removedDataCounter;
+    return false;
+}
+
+bool Manager::InsertIntoCommonMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map)
 {
     if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
     {
@@ -490,6 +501,91 @@ bool Manager::InsertIntoMap(ItemData& data, std::unordered_map<RE::FormID, std::
         return true;
     }
 
+    ++removedDataCounter;
+    return false;
+}
+
+// hear me out
+bool Manager::InsertIntoWeirdMapAdd(ItemData& data, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
+{
+    if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
+    {
+        mapIterator->second.first.emplace_back(data);
+
+        ++totalDataSize;
+
+        return true;
+    }
+    else
+    {
+        map.emplace(data.targetForm->formID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>());
+        map.at(data.targetForm->formID).first.emplace_back(data);
+
+        ++totalTargetSize;
+        ++totalDataSize;
+
+        return true;
+    }
+
+    ++removedDataCounter;
+    return false;
+}
+
+// hear me out tho
+bool Manager::InsertIntoWeirdMapRemove(ItemData& data, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
+{
+    if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
+    {
+            
+        if (auto innerIterator = mapIterator->second.second.find(data.insertForm->formID); innerIterator != mapIterator->second.second.end())
+        {
+            //innerIterator->second.emplace_back(SmallerItemData(data));
+            innerIterator->second.emplace_back(data);
+            ++totalDataSize;
+
+            return true;
+        }
+        else
+        {
+            mapIterator->second.second.emplace(data.insertForm->formID, std::vector<SmallerItemData>());
+            //mapIterator->second.second.at(data.insertForm->formID).emplace_back(SmallerItemData(data));
+            mapIterator->second.second.at(data.insertForm->formID).emplace_back(data);
+            ++totalDataSize;
+
+            return true;
+        }
+    }
+    else
+    {
+        map.emplace(data.targetForm->formID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>());
+
+        // declared in if statement
+        mapIterator = map.find(data.targetForm->formID);
+
+        if (auto innerIterator = mapIterator->second.second.find(data.insertForm->formID); innerIterator != mapIterator->second.second.end())
+        {
+            //innerIterator->second.emplace_back(SmallerItemData(data));
+            innerIterator->second.emplace_back(data);
+            ++totalTargetSize;
+            ++totalDataSize;
+
+            return true;
+        }
+        else
+        {
+            mapIterator->second.second.emplace(data.insertForm->formID, std::vector<SmallerItemData>());
+            //mapIterator->second.second.at(data.insertForm->formID).emplace_back(SmallerItemData(data));
+            mapIterator->second.second.at(data.insertForm->formID).emplace_back(data);
+            ++totalTargetSize;
+            ++totalDataSize;
+
+            return true;
+        }
+
+        return true;
+    }
+
+    ++removedDataCounter;
     return false;
 }
 
@@ -692,15 +788,42 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
         case Data::VALID_MULTI_PROTOCOL_NO_INSERT_REMOVE:
             keepOriginal = false;
             return true;
-        // move to ProcessFocusProtocol
-        // ----- FOCUS MAPS -----
-        // 200-249
-        
-        // 250-299
+	}
 
-        // 300-349
+    ++wrongDataCounter;
+    return false;
+}
 
-        // 350-399
+bool Manager::ProcessFocusProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal)
+{
+    switch (data.protocol)
+	{
+    // ----- FOCUS MAPS -----
+    // 200-249
+    case Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_BASIC:
+
+        insertBuffer[insertBufferElements].form = data.insertForm;
+        insertBuffer[insertBufferElements].count = (rand() % (data.maxCount - data.minCount + 1)) + data.minCount;
+        insertBuffer[insertBufferElements].level = (rand() % (data.maxLevel - data.minLevel + 1)) + data.minLevel;
+
+        data.processCounter = 0;
+
+        return true;
+    // 250-299
+
+    // 300-349
+    case Data::VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_BASIC:
+
+        data.processCounter = 0;
+
+        keepOriginal = false;
+        return true;
+
+    // 350-399
+    case Data::VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_BASIC:
+
+        keepOriginal = false;
+        return true;
 	}
 
     ++wrongDataCounter;
@@ -723,3 +846,4 @@ void Manager::InsertLeveledListBuffers(const std::size_t insertBufferElements, S
         entries[(j + originalBufferElements)].level = insertBuffer[j].level;
     }
 }
+

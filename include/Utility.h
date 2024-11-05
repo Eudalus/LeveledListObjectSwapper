@@ -1,6 +1,8 @@
 #pragma once
 
 #include "SimpleIni.h"
+#include "ItemData.h"
+#include "SmallerItemData.h"
 
 class Utility
 {

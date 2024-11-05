@@ -95,15 +95,15 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 
         if (manager.LoadData())
         {
-            if (!manager.itemMap.empty() || !manager.itemLeveledMap.empty())
+            if (!manager.itemMap.empty() || !manager.itemLeveledHybridMap.empty())
             {
                 manager.ProcessLeveledItem();
             }
-            if (!manager.npcMap.empty() || !manager.npcLeveledMap.empty())
+            if (!manager.npcMap.empty() || !manager.npcLeveledHybridMap.empty())
             {
                 manager.ProcessLeveledNPC();
             }
-            if (!manager.spellMap.empty() || !manager.spellLeveledMap.empty())
+            if (!manager.spellMap.empty() || !manager.spellLeveledHybridMap.empty())
             {
                 manager.ProcessLeveledSpell();
             }
