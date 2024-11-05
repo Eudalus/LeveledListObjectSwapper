@@ -165,11 +165,12 @@ bool Manager::LoadData()
     return totalDataSize >= 1;
 }
 
-bool Manager::ProcessLeveledItem()
+
+template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& formType)
 {
     const auto dataHandler = RE::TESDataHandler::GetSingleton();
-    const auto& lists = dataHandler->GetFormArray(RE::FormType::LeveledItem);
-    
+    const auto& lists = dataHandler->GetFormArray(formType);
+
     const RE::BSTArrayBase::size_type numberOfLists = lists.size();
 
     SmallerLeveledObject originalBuffer[Data::MAX_ENTRY_SIZE];
@@ -195,12 +196,10 @@ bool Manager::ProcessLeveledItem()
 
     std::srand(std::time(NULL));
 
-    // check for leveled list targets
-
     // check list entries for batch inserts
     for (RE::BSTArrayBase::size_type i = 0; i < numberOfLists; ++i)
     {
-        RE::TESLevItem *currentList = lists[i] ? lists[i]->As<RE::TESLevItem>() : nullptr;
+        T *currentList = lists[i] ? lists[i]->As<T>() : nullptr;
 
         if (currentList)
         {
@@ -341,21 +340,10 @@ bool Manager::ProcessLeveledItem()
     return false;
 }
 
-bool Manager::ProcessLeveledNPC()
-{
-    const auto dataHandler = RE::TESDataHandler::GetSingleton();
-    const auto& lists = dataHandler->GetFormArray(RE::FormType::LeveledNPC);
-
-    return false;
-}
-
-bool Manager::ProcessLeveledSpell()
-{
-    const auto dataHandler = RE::TESDataHandler::GetSingleton();
-    const auto& lists = dataHandler->GetFormArray(RE::FormType::LeveledSpell);
-
-    return false;
-}
+// because C++ can't just ever work
+template bool Manager::ProcessBatchLeveledList<RE::TESLevItem>(const RE::FormType& formType);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevCharacter>(const RE::FormType& formType);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormType& formType);
 
 bool Manager::DirectProtocol(ItemData& data)
 {

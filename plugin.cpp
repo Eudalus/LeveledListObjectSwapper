@@ -95,17 +95,32 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 
         if (manager.LoadData())
         {
-            if (!manager.itemMap.empty() || !manager.itemLeveledHybridMap.empty())
+            // ----- FOCUS FUNCTIONS -----
+            if (!manager.itemLeveledHybridMap.empty())
             {
-                manager.ProcessLeveledItem();
+
             }
-            if (!manager.npcMap.empty() || !manager.npcLeveledHybridMap.empty())
+            if (!manager.npcLeveledHybridMap.empty())
             {
-                manager.ProcessLeveledNPC();
+
             }
-            if (!manager.spellMap.empty() || !manager.spellLeveledHybridMap.empty())
+            if (!manager.spellLeveledHybridMap.empty())
             {
-                manager.ProcessLeveledSpell();
+
+            }
+
+            // ----- BATCH FUNCTIONS -----
+            if (!manager.itemMap.empty())
+            {
+                manager.ProcessBatchLeveledList<RE::TESLevItem>(RE::FormType::LeveledItem);
+            }
+            if (!manager.npcMap.empty())
+            {
+                manager.ProcessBatchLeveledList<RE::TESLevCharacter>(RE::FormType::LeveledNPC);
+            }
+            if (!manager.spellMap.empty())
+            {
+                manager.ProcessBatchLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell);
             }
         }
         /*

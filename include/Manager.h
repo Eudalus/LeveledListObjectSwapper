@@ -13,9 +13,9 @@ class Manager
 public:
 
     bool LoadData();
-    bool ProcessLeveledItem();
-    bool ProcessLeveledNPC();
-    bool ProcessLeveledSpell();
+
+    template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType);
+
     bool DirectProtocol(ItemData& data);
     bool InsertIntoBatchMap(ItemData& data); // calls InsertIntoCommonMap
     bool InsertIntoFocusMapAdd(ItemData& data); // calls InsertIntoWeirdMap
