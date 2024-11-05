@@ -95,33 +95,44 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 
         if (manager.LoadData())
         {
+            // seed random number generator used for min-max count and level
+            std::srand(std::time(NULL));
+
+            // seed random number generator used for modification chance
+            manager.randomEngine.seed(std::random_device()()); // for real
+
             // ----- FOCUS FUNCTIONS -----
             if (!manager.itemLeveledHybridMap.empty())
             {
-
+                manager.ProcessFocusLeveledList<RE::TESLevItem>(RE::FormType::LeveledItem, manager.itemLeveledHybridMap);
             }
             if (!manager.npcLeveledHybridMap.empty())
             {
-
+                manager.ProcessFocusLeveledList<RE::TESLevCharacter>(RE::FormType::LeveledNPC, manager.npcLeveledHybridMap);
             }
             if (!manager.spellLeveledHybridMap.empty())
             {
-
+                manager.ProcessFocusLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell, manager.spellLeveledHybridMap);
             }
 
             // ----- BATCH FUNCTIONS -----
             if (!manager.itemMap.empty())
             {
-                manager.ProcessBatchLeveledList<RE::TESLevItem>(RE::FormType::LeveledItem);
+                manager.ProcessBatchLeveledList<RE::TESLevItem>(RE::FormType::LeveledItem, manager.itemMap);
             }
             if (!manager.npcMap.empty())
             {
-                manager.ProcessBatchLeveledList<RE::TESLevCharacter>(RE::FormType::LeveledNPC);
+                manager.ProcessBatchLeveledList<RE::TESLevCharacter>(RE::FormType::LeveledNPC, manager.npcMap);
             }
             if (!manager.spellMap.empty())
             {
-                manager.ProcessBatchLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell);
+                manager.ProcessBatchLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell, manager.spellMap);
             }
+
+            //logger::info("{} unique leveled item lists modified", manager.uniqueLeveledItemBatchModified);
+            //logger::info("{} total leveled item list insertions", manager.totalLeveledItemInserts);
+            //logger::info("{} total leveled item lists removals", manager.totalLeveledItemRemovals);
+            //logger::info("{} total leveled item inserts randomly chance skipped", manager.totalLeveledItemChanceSkips);
         }
         /*
         end = std::chrono::system_clock::now();

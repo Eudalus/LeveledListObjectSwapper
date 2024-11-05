@@ -166,7 +166,7 @@ bool Manager::LoadData()
 }
 
 
-template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& formType)
+template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map)
 {
     const auto dataHandler = RE::TESDataHandler::GetSingleton();
     const auto& lists = dataHandler->GetFormArray(formType);
@@ -177,24 +177,24 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
     SmallerLeveledObject insertBuffer[Data::MAX_ENTRY_SIZE];
 
     // not to be confused with capacity
-    size_t originalBufferElements = 0;
-    size_t insertBufferElements = 0;
+    size_t originalBufferElements;
+    size_t insertBufferElements;
+
     std::vector<ItemData*> resetVector;
-    resetVector.reserve(Data::MAX_ENTRY_SIZE);
 
     size_t oldListSize;
     size_t newListSize;
     size_t currentItemsSize;
     size_t resetVectorSize;
 
-    std::default_random_engine randomEngine;
     std::uniform_real_distribution<float> randomDistributor(0.0f, 99.99f);
 
     bool ongoing;
     bool resizePending;
     bool keepOriginal;
+    bool listDoesNotUseAll;
 
-    std::srand(std::time(NULL));
+    resetVector.reserve(Data::MAX_ENTRY_SIZE);
 
     // check list entries for batch inserts
     for (RE::BSTArrayBase::size_type i = 0; i < numberOfLists; ++i)
@@ -207,6 +207,7 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
             insertBufferElements = 0;
             ongoing = true;
             resizePending = false;
+            listDoesNotUseAll = ((currentList->llFlags & RE::TESLeveledList::Flag::kUseAll) == 0);
 
             RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = currentList->entries;
             oldListSize = std::min((size_t)currentList->numEntries, currentEntries.size()); // guaranteed to be Data::MAX_ENTRY_SIZE (255) or lower because currentList->numEntries is an unsigned byte with max value 0xFF (255)
@@ -218,7 +219,7 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
 
                 if (currentForm)
                 {
-                    if (auto mapIterator = itemMap.find(currentForm->formID); mapIterator != itemMap.end())
+                    if (auto mapIterator = map.find(currentForm->formID); mapIterator != map.end())
                     {
                         std::vector<ItemData>& currentItems = mapIterator->second;
 
@@ -228,22 +229,29 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
                         {
                             if (currentItems[k].processCounter > 0)
                             {
-                                if (randomDistributor(randomEngine) < currentItems[k].chance)
+                                if (listDoesNotUseAll || currentItems[k].useAll)
                                 {
-                                    if (ProcessBatchProtocol(currentItems[k], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal, resetVector))
+                                    if (randomDistributor(randomEngine) < currentItems[k].chance)
                                     {
-                                        resizePending = true;
-                                    }
+                                        if (ProcessBatchProtocol(currentItems[k], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal, resetVector))
+                                        {
+                                            resizePending = true;
+                                        }
 
-                                    if (insertBufferElements >= Data::MAX_ENTRY_SIZE)
+                                        if (insertBufferElements >= Data::MAX_ENTRY_SIZE)
+                                        {
+                                            // won't be able to insert more items into list, lets 2nd level for loop terminate early
+                                            ongoing = false;
+                                        }
+                                    }
+                                    else
                                     {
-                                        // won't be able to insert more items into list, lets 2nd level for loop terminate early
-                                        ongoing = false;
+                                        ++totalListChanceSkips;
                                     }
                                 }
                                 else
                                 {
-                                    ++totalLeveledItemChanceSkips;
+                                    ++totalListUseAllSkips;
                                 }
                             }
                         }
@@ -298,9 +306,9 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
                     resetVector.reserve(Data::MAX_ENTRY_SIZE);
                 }
 
-                ++uniqueLeveledItemModified;
-                totalLeveledItemInserts += insertBufferElements;
-                totalLeveledItemRemovals += oldListSize - originalBufferElements;
+                ++uniqueListBatchModified;
+                totalListInserts += insertBufferElements;
+                totalListRemovals += oldListSize - originalBufferElements;
                 
                 /*
                 logger::info("{} OLD LIST SIZE", oldListSize);
@@ -332,18 +340,138 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
         }
     }
 
-    logger::info("{} unique leveled item lists modified", uniqueLeveledItemModified);
-    logger::info("{} total leveled item list insertions", totalLeveledItemInserts);
-    logger::info("{} total leveled item lists removals", totalLeveledItemRemovals);
-    logger::info("{} total leveled item inserts randomly chance skipped", totalLeveledItemChanceSkips);
+    return false;
+}
+
+// necessary signatures for the linker
+template bool Manager::ProcessBatchLeveledList<RE::TESLevItem>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
+
+
+template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
+{
+    SmallerLeveledObject originalBuffer[Data::MAX_ENTRY_SIZE];
+    SmallerLeveledObject insertBuffer[Data::MAX_ENTRY_SIZE];
+
+    // not to be confused with capacity
+    size_t originalBufferElements;
+    size_t insertBufferElements;
+
+    std::vector<ItemData*> resetVector;
+
+    size_t oldListSize;
+    size_t newListSize;
+    size_t currentItemsSize;
+    size_t resetVectorSize;
+
+    std::uniform_real_distribution<float> randomDistributor(0.0f, 99.99f);
+
+    bool ongoing;
+    bool resizePending;
+    bool keepOriginal;
+    bool listDoesNotUseAll;
+    bool removalOngoing;
+
+    resetVector.reserve(Data::MAX_ENTRY_SIZE);
+
+    // check list for focus inserts
+    for (auto& [targetKey, pairValue] : map)
+    {
+        T* targetForm = RE::TESForm::LookupByID<T>(targetKey);
+
+        if (targetForm)
+        {
+            originalBufferElements = 0;
+            insertBufferElements = 0;
+            ongoing = true;
+            
+            resizePending = false;
+
+             RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = targetForm->entries;
+             std::vector<ItemData>& insertDataList = pairValue.first;
+             std::unordered_map<RE::FormID, std::vector<SmallerItemData>>& removeDataList = pairValue.second;
+
+             oldListSize = std::min((size_t)(targetForm->numEntries), currentEntries.size()); // guaranteed to be Data::MAX_ENTRY_SIZE (255) or lower because currentList->numEntries is an unsigned byte with max value 0xFF (255)
+
+             listDoesNotUseAll = ((targetForm->llFlags & RE::TESLeveledList::Flag::kUseAll) == 0);
+
+             for (size_t i = 0; i < oldListSize; ++i)
+             {
+                removalOngoing = true;
+                keepOriginal = true;
+                auto currentForm = currentEntries[i].form;
+
+                // removal
+                if (currentForm)
+                {
+                    if (auto mapIterator = removeDataList.find(currentForm->formID); mapIterator != removeDataList.end())
+                    {
+                        std::vector<SmallerItemData>& removeDataVector = mapIterator->second;
+
+                        currentItemsSize = removeDataVector.size();
+
+                        for (size_t k = 0; k < currentItemsSize; ++k)
+                        {
+                            if (removeDataVector[k].processCounter > 0)
+                            {
+                                if (listDoesNotUseAll || removeDataVector[k].useAll)
+                                {
+                                    if (randomDistributor(randomEngine) < removeDataVector[k].chance)
+                                    {
+                                        //if(ProcessFocusProtocolRemove())
+                                    }
+                                    else
+                                    {
+                                        ++totalListChanceSkips;
+                                    }
+                                }
+                                else
+                                {
+                                    ++totalListUseAllSkips;
+                                }
+                            }
+                        }
+
+                        /*
+                        if (currentItems[k].processCounter > 0)
+                        {
+                            if (listDoesNotUseAll || currentItems[k].useAll)
+                            {
+                                if (randomDistributor(randomEngine) < currentItems[k].chance)
+                                {
+                                    if (ProcessFocusProtocol(currentItems[k], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal, resetVector))
+                                    {
+                                            
+                                    }
+                                }
+                            }
+                        }
+                        */
+
+                    }
+                }
+
+                if (keepOriginal)
+                {
+                    //originalBuffer[originalBufferElements].form = ...
+                    //++originalBufferElements;
+                }
+             }
+
+             // loop over insertDataList
+             // use std::min(Data::MAX_ENTRY_SIZE - originalBufferElements, insertDataList.size())
+             // add into insertBuffer while j < min above
+        }
+    }
 
     return false;
 }
 
-// because C++ can't just ever work
-template bool Manager::ProcessBatchLeveledList<RE::TESLevItem>(const RE::FormType& formType);
-template bool Manager::ProcessBatchLeveledList<RE::TESLevCharacter>(const RE::FormType& formType);
-template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormType& formType);
+// necessary signatures for the linker
+template bool Manager::ProcessFocusLeveledList<RE::TESLevItem>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+template bool Manager::ProcessFocusLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+template bool Manager::ProcessFocusLeveledList<RE::TESLevSpell>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
 
 bool Manager::DirectProtocol(ItemData& data)
 {

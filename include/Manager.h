@@ -14,7 +14,8 @@ public:
 
     bool LoadData();
 
-    template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType);
+    template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
+    template<typename T> bool ProcessFocusLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
 
     bool DirectProtocol(ItemData& data);
     bool InsertIntoBatchMap(ItemData& data); // calls InsertIntoCommonMap
@@ -38,42 +39,33 @@ public:
 
     // ----- FOCUS MAPS -----
     // specific inserts with leveled list targets
-    //std::unordered_map<RE::FormID, std::vector<ItemData>> itemLeveledMap;
-    //std::unordered_map<RE::FormID, std::vector<ItemData>> npcLeveledMap;
-    //std::unordered_map<RE::FormID, std::vector<ItemData>> spellLeveledMap;
-
     // key is target leveled list FormID, value pair first -> std::vector<ItemData> is direct inserts into leveled list, value pair second -> std::unordered_map<FormID, SmallerItemData> needs to loop over leveled list and determine if any items inside match secondary INSERT key for removal
     std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> itemLeveledHybridMap;
     std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> npcLeveledHybridMap;
     std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> spellLeveledHybridMap;
 
+    std::default_random_engine randomEngine;
+
     std::size_t removedDataCounter = 0; // bad data from ini file
     std::size_t wrongDataCounter = 0; // good data from ini file, but can't insert into target
 
-    // number of leveled lists edited
-    std::size_t uniqueLeveledItemModified = 0;
-    std::size_t uniqueLeveledNPCModified = 0;
-    std::size_t uniqueLeveledSpellModified = 0;
+    // number of leveled lists edited in focus
+    std::size_t uniqueListFocusModified = 0;
+
+    // number of leveled lists edited in batch
+    std::size_t uniqueListBatchModified = 0;
 
     // number of times a new item was inserted into a leveled list
-    std::size_t totalLeveledItemInserts = 0;
-    std::size_t totalLeveledNPCInserts = 0;
-    std::size_t totalLeveledSpellInserts = 0;
+    std::size_t totalListInserts = 0;
 
     // number of times an original item was removed from a leveled list
-    std::size_t totalLeveledItemRemovals = 0;
-    std::size_t totalLeveledNPCRemovals = 0;
-    std::size_t totalLeveledSpellRemovals = 0;
+    std::size_t totalListRemovals = 0;
 
     // number of times that were skipped due to ItemData chance
-    std::size_t totalLeveledItemChanceSkips = 0;
-    std::size_t totalLeveledNPCChanceSkips = 0;
-    std::size_t totalLeveledSpellChanceSkips = 0;
+    std::size_t totalListChanceSkips = 0;
 
     // number of times that leveled lists modifications were skipped due to UseAll flag
-    std::size_t totalLeveledItemUseAllSkips = 0;
-    std::size_t totalLeveledNPCUseAllSkips = 0;
-    std::size_t totalLeveledSpellUseAllSkips = 0;
+    std::size_t totalListUseAllSkips = 0;
 
     // number of keys in all maps
     std::size_t totalTargetSize = 0;
