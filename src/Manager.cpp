@@ -283,8 +283,11 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
                 {
                     currentEntries.resize(newListSize);
 
+                    // calculate maximum number of inserts allowed beforehand
+                    insertBufferElements = std::min(insertBufferElements, Data::MAX_ENTRY_SIZE - originalBufferElements);
+
                     // insert data from originalBuffer and insertBuffer to leveled list entries
-                    InsertLeveledListBuffers(insertBufferElements, insertBuffer, originalBufferElements, originalBuffer, currentEntries, newListSize);
+                    InsertLeveledListBuffers(insertBufferElements, insertBuffer, originalBufferElements, originalBuffer, currentEntries);
 
                     // need to sort by level and null extra data pointers
                     Utility::SortLeveledListArrayByLevel(currentEntries);
@@ -352,28 +355,22 @@ template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormTy
 template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
 {
     SmallerLeveledObject originalBuffer[Data::MAX_ENTRY_SIZE];
-    SmallerLeveledObject insertBuffer[Data::MAX_ENTRY_SIZE];
 
     // not to be confused with capacity
     size_t originalBufferElements;
-    size_t insertBufferElements;
-
-    std::vector<ItemData*> resetVector;
 
     size_t oldListSize;
     size_t newListSize;
     size_t currentItemsSize;
-    size_t resetVectorSize;
+    size_t insertLimit;
 
     std::uniform_real_distribution<float> randomDistributor(0.0f, 99.99f);
 
-    bool ongoing;
+    bool insertOngoing;
     bool resizePending;
     bool keepOriginal;
     bool listDoesNotUseAll;
     bool removalOngoing;
-
-    resetVector.reserve(Data::MAX_ENTRY_SIZE);
 
     // check list for focus inserts
     for (auto& [targetKey, pairValue] : map)
@@ -383,26 +380,25 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
         if (targetForm)
         {
             originalBufferElements = 0;
-            insertBufferElements = 0;
-            ongoing = true;
+            insertOngoing = true;
             
             resizePending = false;
 
-             RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = targetForm->entries;
-             std::vector<ItemData>& insertDataList = pairValue.first;
-             std::unordered_map<RE::FormID, std::vector<SmallerItemData>>& removeDataList = pairValue.second;
+            RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = targetForm->entries;
+            std::vector<ItemData>& insertDataList = pairValue.first;
+            std::unordered_map<RE::FormID, std::vector<SmallerItemData>>& removeDataList = pairValue.second;
 
-             oldListSize = std::min((size_t)(targetForm->numEntries), currentEntries.size()); // guaranteed to be Data::MAX_ENTRY_SIZE (255) or lower because currentList->numEntries is an unsigned byte with max value 0xFF (255)
+            oldListSize = std::min((size_t)(targetForm->numEntries), currentEntries.size()); // guaranteed to be Data::MAX_ENTRY_SIZE (255) or lower because currentList->numEntries is an unsigned byte with max value 0xFF (255)
 
-             listDoesNotUseAll = ((targetForm->llFlags & RE::TESLeveledList::Flag::kUseAll) == 0);
+            listDoesNotUseAll = ((targetForm->llFlags & RE::TESLeveledList::Flag::kUseAll) == 0);
 
-             for (size_t i = 0; i < oldListSize; ++i)
-             {
+            // preparing removals
+            for (size_t i = 0; i < oldListSize; ++i)
+            {
                 removalOngoing = true;
                 keepOriginal = true;
                 auto currentForm = currentEntries[i].form;
 
-                // removal
                 if (currentForm)
                 {
                     if (auto mapIterator = removeDataList.find(currentForm->formID); mapIterator != removeDataList.end())
@@ -411,7 +407,7 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
 
                         currentItemsSize = removeDataVector.size();
 
-                        for (size_t k = 0; k < currentItemsSize; ++k)
+                        for (size_t k = 0; (k < currentItemsSize) && keepOriginal; ++k)
                         {
                             if (removeDataVector[k].processCounter > 0)
                             {
@@ -419,7 +415,10 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
                                 {
                                     if (randomDistributor(randomEngine) < removeDataVector[k].chance)
                                     {
-                                        //if(ProcessFocusProtocolRemove())
+                                        if (ProcessFocusProtocolRemove(removeDataVector[k], keepOriginal))
+                                        {
+                                            resizePending = true;
+                                        }
                                     }
                                     else
                                     {
@@ -432,36 +431,48 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
                                 }
                             }
                         }
-
-                        /*
-                        if (currentItems[k].processCounter > 0)
-                        {
-                            if (listDoesNotUseAll || currentItems[k].useAll)
-                            {
-                                if (randomDistributor(randomEngine) < currentItems[k].chance)
-                                {
-                                    if (ProcessFocusProtocol(currentItems[k], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal, resetVector))
-                                    {
-                                            
-                                    }
-                                }
-                            }
-                        }
-                        */
-
                     }
                 }
 
                 if (keepOriginal)
                 {
-                    //originalBuffer[originalBufferElements].form = ...
-                    //++originalBufferElements;
+                    originalBuffer[originalBufferElements].form = currentEntries[i].form;
+                    originalBuffer[originalBufferElements].count = currentEntries[i].count;
+                    originalBuffer[originalBufferElements].level = currentEntries[i].level;
+                    ++originalBufferElements;
                 }
-             }
+            }
 
-             // loop over insertDataList
-             // use std::min(Data::MAX_ENTRY_SIZE - originalBufferElements, insertDataList.size())
-             // add into insertBuffer while j < min above
+            // removals prepped
+
+            insertLimit = std::min(insertDataList.size(), Data::MAX_ENTRY_SIZE - originalBufferElements);
+
+            if (resizePending || insertLimit > 0)
+            {
+                newListSize = std::min(originalBufferElements + insertLimit, Data::MAX_ENTRY_SIZE);
+
+                if (newListSize == 0)
+                {
+                    // currentEntries.resize(0)
+                    currentEntries.clear();
+                } 
+                else
+                {
+                    currentEntries.resize(newListSize);
+
+                    // insert data from originalBuffer and insertBuffer to leveled list entries
+                    InsertLeveledListVectorBuffer(insertLimit, insertDataList, originalBufferElements, originalBuffer, currentEntries);
+
+                    // need to sort by level and null extra data pointers
+                    Utility::SortLeveledListArrayByLevel(currentEntries);
+                }
+
+                targetForm->numEntries = newListSize;
+
+                ++uniqueListBatchModified;
+                totalListInserts += insertLimit;
+                totalListRemovals += oldListSize - originalBufferElements;
+            }
         }
     }
 
@@ -910,10 +921,12 @@ bool Manager::ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
     return false;
 }
 
-bool Manager::ProcessFocusProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal)
+// unnecessary
+bool Manager::ProcessFocusProtocolAdd(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer)
 {
+
     switch (data.protocol)
-	{
+    {
     // ----- FOCUS MAPS -----
     // 200-249
     case Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_BASIC:
@@ -924,9 +937,21 @@ bool Manager::ProcessFocusProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
 
         data.processCounter = 0;
 
+        ++insertBufferElements;
+
         return true;
     // 250-299
+    }
 
+    ++wrongDataCounter;
+    return false;
+}
+
+bool Manager::ProcessFocusProtocolRemove(SmallerItemData& data, bool& keepOriginal)
+{
+    switch (data.protocol)
+	{
+    // ----- FOCUS MAPS -----
     // 300-349
     case Data::VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_BASIC:
 
@@ -946,7 +971,7 @@ bool Manager::ProcessFocusProtocol(ItemData& data, RE::LEVELED_OBJECT& originalO
     return false;
 }
 
-void Manager::InsertLeveledListBuffers(const std::size_t insertBufferElements, SmallerLeveledObject* insertBuffer, const std::size_t originalBufferElements, SmallerLeveledObject* originalBuffer, RE::SimpleArray<RE::LEVELED_OBJECT>& entries, const std::size_t entriesCapacity)
+void Manager::InsertLeveledListBuffers(const std::size_t insertBufferElements, SmallerLeveledObject* insertBuffer, const std::size_t originalBufferElements, SmallerLeveledObject* originalBuffer, RE::SimpleArray<RE::LEVELED_OBJECT>& entries)
 {
     for (size_t i = 0; i < originalBufferElements; ++i) // shouldn't need entriesCapacity check
     {
@@ -955,7 +980,8 @@ void Manager::InsertLeveledListBuffers(const std::size_t insertBufferElements, S
         entries[i].level = originalBuffer[i].level;
     }
 
-    for (size_t j = 0; (j < insertBufferElements) && ((j + originalBufferElements) < entriesCapacity); ++j)
+    //for (size_t j = 0; (j < insertBufferElements) && ((j + originalBufferElements) < entriesCapacity); ++j)
+    for (size_t j = 0; j < insertBufferElements; ++j) // calculate insert limit before
     {
         entries[(j + originalBufferElements)].form = insertBuffer[j].form;
         entries[(j + originalBufferElements)].count = insertBuffer[j].count;
@@ -963,3 +989,20 @@ void Manager::InsertLeveledListBuffers(const std::size_t insertBufferElements, S
     }
 }
 
+
+void Manager::InsertLeveledListVectorBuffer(const std::size_t insertLimit, std::vector<ItemData>& insertDataVector, const std::size_t originalBufferElements, SmallerLeveledObject* originalBuffer, RE::SimpleArray<RE::LEVELED_OBJECT>& entries)
+{
+    for (size_t i = 0; i < originalBufferElements; ++i)
+    {
+        entries[i].form = originalBuffer[i].form;
+        entries[i].count = originalBuffer[i].count;
+        entries[i].level = originalBuffer[i].level;
+    }
+
+    for (size_t j = 0; j < insertLimit; ++j)
+    {
+        entries[(j + originalBufferElements)].form = insertDataVector[j].insertForm;
+        entries[(j + originalBufferElements)].count = (rand() % (insertDataVector[j].maxCount - insertDataVector[j].minCount + 1)) + insertDataVector[j].minCount;
+        entries[(j + originalBufferElements)].level = (rand() % (insertDataVector[j].maxLevel - insertDataVector[j].minLevel + 1)) + insertDataVector[j].minLevel;
+    }
+}
