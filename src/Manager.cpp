@@ -90,11 +90,11 @@ bool Manager::LoadData()
 
         for (auto &[section, comment, order] : sections)
         {
-            logger::info("READ SECTION: {}", section);
+            //logger::info("READ SECTION: {}", section);
 
             Utility::GetIniValue(ini, targetString, section, "Target",
                               DEFAULT_TARGET_STRING);
-            logger::info("Target: {}", targetString);
+            //logger::info("Target: {}", targetString);
 
             currentData.targetForm = Utility::AcquireForm(targetString, targetEditorID, targetPlugin, targetFormID);
 
@@ -103,13 +103,14 @@ bool Manager::LoadData()
             // bypass all data under current section if target is not valid
             if (!currentData.targetForm || currentData.targetFormType == Data::INVALID_FORM_TYPE)
             {
+                //logger::warn("error at {} in {}", section, path);
                 ++removedDataCounter;
                 continue;
             }
 
             Utility::GetIniValue(ini, insertString, section, "Insert",
                               DEFAULT_INSERT_STRING);
-            logger::info("Insert: {}", insertString);
+            //logger::info("Insert: {}", insertString);
 
             currentData.insertForm = Utility::AcquireForm(insertString, insertEditorID, insertPlugin, insertFormID);
 
@@ -117,27 +118,27 @@ bool Manager::LoadData()
 
             Utility::GetIniValue(ini, protocolString, section, "Protocol",
                               DEFAULT_PROTOCOL_STRING);
-            logger::info("Protocol: {}", protocolString);
+            //logger::info("Protocol: {}", protocolString);
 
             //currentData.protocol = Utility::ClampProtocol(Utility::StringToUnInt(protocolString, DEFAULT_PROTOCOL_VALUE));
             currentData.protocol = Utility::StringToUnInt(protocolString, DEFAULT_PROTOCOL_VALUE);
 
             Utility::GetIniValue(ini, countString, section, "Count", DEFAULT_COUNT_STRING);
-            logger::info("Count: {}", countString);
+            //logger::info("Count: {}", countString);
 
             // pass by reference assignment
             Utility::AcquireRangeData(countString, currentData.minCount, currentData.maxCount, DEFAULT_COUNT_VALUE);
 
             Utility::GetIniValue(ini, levelString, section, "Level",
                               DEFAULT_LEVEL_STRING);
-            logger::info("Level: {}", levelString);
+            //logger::info("Level: {}", levelString);
 
             // pass by reference assignment
             Utility::AcquireRangeData(levelString, currentData.minLevel, currentData.maxLevel, DEFAULT_LEVEL_VALUE);
 
             Utility::GetIniValue(ini, chanceString, section, "Chance",
                               DEFAULT_CHANCE_STRING);
-            logger::info("Chance: {}", chanceString);
+            //logger::info("Chance: {}", chanceString);
 
             currentData.chance = std::clamp(
                 Utility::StringToFloat(chanceString, DEFAULT_CHANCE_VALUE),
@@ -145,7 +146,7 @@ bool Manager::LoadData()
 
             Utility::GetIniValue(ini, useAllString, section, "UseAll",
                               DEFAULT_USE_ALL_STRING);
-            logger::info("UseAll: {}", useAllString);
+            //logger::info("UseAll: {}", useAllString);
 
             currentData.useAll = Utility::StringToUnInt(useAllString, DEFAULT_USE_ALL_VALUE);
 
@@ -350,7 +351,6 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
 template bool Manager::ProcessBatchLeveledList<RE::TESLevItem>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
 template bool Manager::ProcessBatchLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
 template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
-
 
 template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
 {

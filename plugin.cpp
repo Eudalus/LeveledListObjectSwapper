@@ -86,11 +86,11 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	}
     else if (a_message->type == SKSE::MessagingInterface::kDataLoaded)
     {
-        /*
+        
         std::chrono::time_point<std::chrono::system_clock> start, end;
 
         start = std::chrono::system_clock::now();
-        */
+        
         Manager manager;
 
         if (manager.LoadData())
@@ -129,17 +129,19 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 manager.ProcessBatchLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell, manager.spellMap);
             }
 
-            //logger::info("{} unique leveled item lists modified", manager.uniqueLeveledItemBatchModified);
-            //logger::info("{} total leveled item list insertions", manager.totalLeveledItemInserts);
-            //logger::info("{} total leveled item lists removals", manager.totalLeveledItemRemovals);
-            //logger::info("{} total leveled item inserts randomly chance skipped", manager.totalLeveledItemChanceSkips);
+            logger::info("{} unique leveled lists batch modified", manager.uniqueListBatchModified);
+            logger::info("{} unique target leveled lists modified", manager.uniqueListFocusModified);
+            logger::info("{} total leveled list insertions", manager.totalListInserts);
+            logger::info("{} total leveled list removals", manager.totalListRemovals);
+            logger::info("{} total leveled list modifications randomly chance skipped", manager.totalListChanceSkips);
+            logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListChanceSkips);
         }
-        /*
+        
         end = std::chrono::system_clock::now();
 
         std::chrono::duration<double> elapsed_seconds = end - start;
-        logger::info("{} ELAPSED TIME", elapsed_seconds.count());
-        */
+        logger::info("{}s ELAPSED TIME", elapsed_seconds.count());
+        
     }
 }
 
