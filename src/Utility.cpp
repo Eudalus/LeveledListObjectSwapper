@@ -389,3 +389,8 @@ std::uint16_t Utility::ClampProtocol(const std::uint16_t value)
         return Data::DEFAULT_PROTOCAL_VALUE;
     }
 }
+
+bool Utility::CompareLeveledListEntryLevel(const RE::LEVELED_OBJECT& a, const RE::LEVELED_OBJECT& b)
+{
+    return a.level < b.level;
+}

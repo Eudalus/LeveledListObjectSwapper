@@ -213,12 +213,12 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
             RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = currentList->entries;
             oldListSize = std::min((size_t)currentList->numEntries, currentEntries.size()); // guaranteed to be Data::MAX_ENTRY_SIZE (255) or lower because currentList->numEntries is an unsigned byte with max value 0xFF (255)
 
-            for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type j = 0; (j < oldListSize) && ongoing; ++j)
+            for (RE::SimpleArray<RE::LEVELED_OBJECT>::size_type j = 0; (j < oldListSize); ++j)
             {
                 keepOriginal = true;
                 auto currentForm = currentEntries[j].form;
 
-                if (currentForm)
+                if (currentForm && ongoing)
                 {
                     if (auto mapIterator = map.find(currentForm->formID); mapIterator != map.end())
                     {
@@ -241,7 +241,7 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
 
                                         if (insertBufferElements >= Data::MAX_ENTRY_SIZE)
                                         {
-                                            // won't be able to insert more items into list, lets 2nd level for loop terminate early
+                                            // won't be able to insert more items into list
                                             ongoing = false;
                                         }
                                     }
@@ -291,7 +291,9 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
                     InsertLeveledListBuffers(insertBufferElements, insertBuffer, originalBufferElements, originalBuffer, currentEntries);
 
                     // need to sort by level and null extra data pointers
-                    Utility::SortLeveledListArrayByLevel(currentEntries);
+                    //Utility::SortLeveledListArrayByLevel(currentEntries);
+                    std::sort(currentEntries.begin(), currentEntries.end(), Utility::CompareLeveledListEntryLevel);
+                    Utility::SanitizeLeveledListArray(currentEntries);
                 }
 
                 currentList->numEntries = newListSize;
@@ -317,7 +319,7 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
                 /*
                 logger::info("{} OLD LIST SIZE", oldListSize);
                 logger::info("{} NEW LIST SIZE", newListSize);
-
+                
                 for (int debugIterator = 0; debugIterator < currentList->numEntries; ++debugIterator)
                 {
                     logger::info("{} NEW LIST --- FORM ID: {} --- COUNT: {} --- LEVEL: {} --- PADDING: {}", debugIterator, std::format("{:x}", currentList->entries[debugIterator].form->formID), currentList->entries[debugIterator].count, currentList->entries[debugIterator].level, currentList->entries[debugIterator].pad0C);
@@ -370,7 +372,6 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
     bool resizePending;
     bool keepOriginal;
     bool listDoesNotUseAll;
-    bool removalOngoing;
 
     // check list for focus inserts
     for (auto& [targetKey, pairValue] : map)
@@ -395,7 +396,6 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
             // preparing removals
             for (size_t i = 0; i < oldListSize; ++i)
             {
-                removalOngoing = true;
                 keepOriginal = true;
                 auto currentForm = currentEntries[i].form;
 
@@ -464,7 +464,9 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
                     InsertLeveledListVectorBuffer(insertLimit, insertDataList, originalBufferElements, originalBuffer, currentEntries);
 
                     // need to sort by level and null extra data pointers
-                    Utility::SortLeveledListArrayByLevel(currentEntries);
+                    //Utility::SortLeveledListArrayByLevel(currentEntries);
+                    std::sort(currentEntries.begin(), currentEntries.end(), Utility::CompareLeveledListEntryLevel);
+                    Utility::SanitizeLeveledListArray(currentEntries);
                 }
 
                 targetForm->numEntries = newListSize;

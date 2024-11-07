@@ -58,4 +58,6 @@ public:
     static bool CheckCompatibleFormTypes(const std::uint8_t insert, const std::uint8_t target);
 
     static std::uint16_t ClampProtocol(const std::uint16_t value);
+
+    static bool CompareLeveledListEntryLevel(const RE::LEVELED_OBJECT& a, const RE::LEVELED_OBJECT& b);
 };
