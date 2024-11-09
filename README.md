@@ -44,18 +44,6 @@ You may need to click `OK` on a few windows, but the project should automaticall
 
 It will _automatically_ download [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG) and everything you need to get started making your new plugin!
 
-To build for AE, SE, or VR, you must go into PCH.h and allow the specific version's define while the other versions are commented out.
-
-Example for building AE:
-
-//#define SKYRIM_VR = TRUE
-
-//#define SKYRIM_SE = TRUE
-
-#define SKYRIM_AE = TRUE
-
-This is necessary because CMake is witchcraft.
-
 > 📜 other templates available at https://github.com/SkyrimScripting/SKSE_Templates
 
 # License
