@@ -551,7 +551,7 @@ bool Manager::DirectProtocol(ItemData& data)
 
 bool Manager::InsertIntoBatchMap(ItemData& data)
 {
-    switch (data.insertFormType)
+    switch (data.targetFormType)
 	{
     case Data::ITEM_FORM_TYPE:
     case Data::LEVELED_ITEM_FORM_TYPE:
