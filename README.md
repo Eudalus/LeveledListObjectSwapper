@@ -16,6 +16,8 @@ CharmedBaryon for [CommonLibSSE-NG](https://github.com/CharmedBaryon/CommonLibSS
 
 brofield for [simpleini](https://github.com/brofield/simpleini)
 
+Boost + MikePopoloski for [boost's unordered_map](https://github.com/MikePopoloski/boost_unordered)
+
 # User Requirements
 * [Address Library for SKSE](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
 	* Needed for SE/AE

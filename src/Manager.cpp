@@ -167,7 +167,7 @@ bool Manager::LoadData()
 }
 
 
-template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map)
+template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map)
 {
     const auto dataHandler = RE::TESDataHandler::GetSingleton();
     const auto& lists = dataHandler->GetFormArray(formType);
@@ -350,11 +350,11 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
 }
 
 // necessary signatures for the linker
-template bool Manager::ProcessBatchLeveledList<RE::TESLevItem>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
-template bool Manager::ProcessBatchLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
-template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevItem>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
 
-template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
+template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
 {
     SmallerLeveledObject originalBuffer[Data::MAX_ENTRY_SIZE];
 
@@ -387,7 +387,7 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
 
             RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = targetForm->entries;
             std::vector<ItemData>& insertDataList = pairValue.first;
-            std::unordered_map<RE::FormID, std::vector<SmallerItemData>>& removeDataList = pairValue.second;
+            boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>& removeDataList = pairValue.second;
 
             oldListSize = std::min((size_t)(targetForm->numEntries), currentEntries.size()); // guaranteed to be Data::MAX_ENTRY_SIZE (255) or lower because currentList->numEntries is an unsigned byte with max value 0xFF (255)
 
@@ -482,9 +482,9 @@ template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& f
 }
 
 // necessary signatures for the linker
-template bool Manager::ProcessFocusLeveledList<RE::TESLevItem>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
-template bool Manager::ProcessFocusLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
-template bool Manager::ProcessFocusLeveledList<RE::TESLevSpell>(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+template bool Manager::ProcessFocusLeveledList<RE::TESLevItem>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+template bool Manager::ProcessFocusLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+template bool Manager::ProcessFocusLeveledList<RE::TESLevSpell>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
 
 bool Manager::DirectProtocol(ItemData& data)
 {
@@ -633,7 +633,7 @@ bool Manager::InsertIntoFocusMapRemove(ItemData& data)
     return false;
 }
 
-bool Manager::InsertIntoCommonMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map)
+bool Manager::InsertIntoCommonMap(ItemData& data, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map)
 {
     if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
     {
@@ -659,7 +659,7 @@ bool Manager::InsertIntoCommonMap(ItemData& data, std::unordered_map<RE::FormID,
 }
 
 // hear me out
-bool Manager::InsertIntoWeirdMapAdd(ItemData& data, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
+bool Manager::InsertIntoWeirdMapAdd(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
 {
     if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
     {
@@ -671,7 +671,7 @@ bool Manager::InsertIntoWeirdMapAdd(ItemData& data, std::unordered_map<RE::FormI
     }
     else
     {
-        map.emplace(data.targetForm->formID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>());
+        map.emplace(data.targetForm->formID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>());
         map.at(data.targetForm->formID).first.emplace_back(data);
 
         ++totalTargetSize;
@@ -685,7 +685,7 @@ bool Manager::InsertIntoWeirdMapAdd(ItemData& data, std::unordered_map<RE::FormI
 }
 
 // hear me out tho
-bool Manager::InsertIntoWeirdMapRemove(ItemData& data, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
+bool Manager::InsertIntoWeirdMapRemove(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
 {
     if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
     {
@@ -710,7 +710,7 @@ bool Manager::InsertIntoWeirdMapRemove(ItemData& data, std::unordered_map<RE::Fo
     }
     else
     {
-        map.emplace(data.targetForm->formID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>());
+        map.emplace(data.targetForm->formID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>());
 
         // declared in if statement
         mapIterator = map.find(data.targetForm->formID);

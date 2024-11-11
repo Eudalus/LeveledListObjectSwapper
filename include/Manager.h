@@ -4,27 +4,26 @@
 #include "ItemData.h"
 #include "SmallerItemData.h"
 #include "TinyItemData.h"
-#include <unordered_map>
 #include <vector>
+#include "boost_unordered.hpp"
 
 namespace logger = SKSE::log;
 
 class Manager
 {
 public:
-
     bool LoadData();
-
-    template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
-    template<typename T> bool ProcessFocusLeveledList(const RE::FormType& formType, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+    
+    template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
+    template<typename T> bool ProcessFocusLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
 
     bool DirectProtocol(ItemData& data);
     bool InsertIntoBatchMap(ItemData& data); // calls InsertIntoCommonMap
     bool InsertIntoFocusMapAdd(ItemData& data); // calls InsertIntoWeirdMap
     bool InsertIntoFocusMapRemove(ItemData& data); // calls InsertIntoWeirdMap
-    bool InsertIntoCommonMap(ItemData& data, std::unordered_map<RE::FormID, std::vector<ItemData>>& map);
-    bool InsertIntoWeirdMapAdd(ItemData& data, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
-    bool InsertIntoWeirdMapRemove(ItemData& data, std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+    bool InsertIntoCommonMap(ItemData& data, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
+    bool InsertIntoWeirdMapAdd(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+    bool InsertIntoWeirdMapRemove(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
 
     // Note that insertBufferElements is not capacity, Data::MAX_ENTRY_SIZE (255) will be array max capacity
     bool ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal, std::vector<ItemData*>& resetVector);
@@ -36,24 +35,24 @@ public:
 
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
-    std::unordered_map<RE::FormID, std::vector<ItemData>> itemMap;
-    std::unordered_map<RE::FormID, std::vector<ItemData>> npcMap;
-    std::unordered_map<RE::FormID, std::vector<ItemData>> spellMap;
+    boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> itemMap;
+    boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> npcMap;
+    boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> spellMap;
 
     // ----- FOCUS MAPS -----
     // specific inserts with leveled list targets
-    // key is target leveled list FormID, value pair first -> std::vector<ItemData> is direct inserts into leveled list, value pair second -> std::unordered_map<FormID, SmallerItemData> needs to loop over leveled list and determine if any items inside match secondary INSERT key for removal
-    std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> itemLeveledHybridMap;
-    std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> npcLeveledHybridMap;
-    std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> spellLeveledHybridMap;
+    // key is target leveled list FormID, value pair first -> std::vector<ItemData> is direct inserts into leveled list, value pair second -> boost::unordered_flat_map<FormID, SmallerItemData> needs to loop over leveled list and determine if any items inside match secondary INSERT key for removal
+    boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>> itemLeveledHybridMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>> npcLeveledHybridMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>> spellLeveledHybridMap;
 
     // ----- KEYWORD MAPS -----
-    std::unordered_map<RE::FormID, std::vector<ItemData>> itemKeywordMap;
-    std::unordered_map<RE::FormID, std::vector<ItemData>> npcKeywordMap;
-    std::unordered_map<RE::FormID, std::vector<ItemData>> spellKeywordMap;
+    boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> itemKeywordMap;
+    boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> npcKeywordMap;
+    boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> spellKeywordMap;
 
     // ----- OUTFIT MAP -----
-    std::unordered_map<RE::FormID, std::vector<TinyItemData>> itemOutfitMap;
+    boost::unordered_flat_map<RE::FormID, std::vector<TinyItemData>> itemOutfitMap;
 
     std::default_random_engine randomEngine;
 
