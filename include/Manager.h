@@ -3,9 +3,10 @@
 #include "SmallerLeveledObject.h"
 #include "ItemData.h"
 #include "SmallerItemData.h"
-#include "TinyItemData.h"
+#include "OutfitItemData.h"
 #include <vector>
 #include "boost_unordered.hpp"
+#include "ContainerItemData.h"
 
 namespace logger = SKSE::log;
 
@@ -52,7 +53,13 @@ public:
     boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> spellKeywordMap;
 
     // ----- OUTFIT MAP -----
-    boost::unordered_flat_map<RE::FormID, std::vector<TinyItemData>> itemOutfitMap;
+    boost::unordered_flat_map<RE::FormID, std::vector<OutfitItemData>> itemOutfitMap;
+
+    // ----- CONTAINER MAP
+    // key is target item or leveled list in container, value pair first -> std::vector<ItemData> should have a leveled list generated
+    // value pair second -> std::vector<ItemData> should just be inserted, swapped, or cause target removal
+    boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, std::vector<ItemData>>> itemContainerMap;
+
 
     std::default_random_engine randomEngine;
 

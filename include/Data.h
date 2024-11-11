@@ -49,6 +49,10 @@ namespace Data
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_NO_INSERT_REMOVE = 104;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_MAX = 104;
 
+    // remove, but replace with a generated leveled list?
+    // inline const std::uint16_t VALID_SINGLE_PROTOCOL_SWAP_BASIC = 120
+    // add pair to batch maps?
+
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_MIN = 150;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_BASIC = 150;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT = 151;
@@ -56,6 +60,8 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL = 153;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_NO_INSERT_REMOVE = 154;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_MAX = 154;
+
+    // inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_BASIC = 170
     
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MIN = 200;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_BASIC = 200;
@@ -69,9 +75,37 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_BASIC = 350;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX = 350;
 
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MIN = 400;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_BASIC = 400;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MAX = 400;
+    // remove, but replace with a generated leveled list?
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MIN = 450;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_BASIC = 450;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MAX = 450;
+
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MIN = 500;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MAX = 500;
+
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MIN = 550;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MAX = 550;
+
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MIN = 600;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX = 600;
+
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MIN = 650;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX = 650;
+
+    // remove, but replace with a generated leveled list?
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN = 700;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MAX = 700;
+
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MIN = 750;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MAX = 750;
+
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_KEYWORD_REMOVE_MIN = 900;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_KEYWORD_REMOVE = 900;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_KEYWORD_REMOVE_MAX = 900;
+
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_KEYWORD_REMOVE_MIN = 950;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_KEYWORD_REMOVE = 950;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_KEYWORD_REMOVE_MAX = 950;
 
     // ----- LEVELED LIST ENTRY -----
     inline const std::size_t MAX_ENTRY_SIZE = 255; // you'd think 256, but nope

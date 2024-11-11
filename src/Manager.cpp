@@ -496,22 +496,22 @@ bool Manager::DirectProtocol(ItemData& data)
         if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_MAX))
         {
             data.processCounter = 1;
-            return InsertIntoBatchMap(data);
+            //return InsertIntoBatchMap(data);
         }
         else if ((protocol >= Data::VALID_MULTI_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_INSERT_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
-            return InsertIntoBatchMap(data);
+            //return InsertIntoBatchMap(data);
         }
         else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_REMOVE_MAX))
         {
             data.processCounter = 1;
-            return InsertIntoBatchMap(data);
+            //return InsertIntoBatchMap(data);
         }
         else if ((protocol >= Data::VALID_MULTI_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_REMOVE_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
-            return InsertIntoBatchMap(data);
+            //return InsertIntoBatchMap(data);
         }
     }
     else if (Utility::CheckCompatibleLeveledListFormTypes(data.insertFormType, data.targetFormType)) // check if form types are compatible
@@ -551,7 +551,7 @@ bool Manager::DirectProtocol(ItemData& data)
             data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoFocusMapRemove(data);
         }
-    }
+    } // maybe allow keyword formtype through to remove any items with those keywords from all leveled lists?
     else if((data.targetFormType >= Data::ITEM_FORM_TYPE) && (data.targetFormType <= Data::LEVELED_SPELL_FORM_TYPE)) // form types are not compatible, exclude keyword formtype
     {
         // check to see if protocol doesn't require valid insert
