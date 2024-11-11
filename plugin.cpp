@@ -83,10 +83,10 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	else */if (a_message->type == SKSE::MessagingInterface::kPostPostLoad)
 	{
         MergeMapperPluginAPI::GetMergeMapperInterface001();
+
 	}
     else if (a_message->type == SKSE::MessagingInterface::kDataLoaded)
     {
-        
         std::chrono::time_point<std::chrono::system_clock> start, end;
 
         start = std::chrono::system_clock::now();

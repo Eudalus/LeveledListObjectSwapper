@@ -47,17 +47,22 @@ public:
     /// <returns>
     /// 0 if form is null or form is not an acceptable form type
     /// 1 if form can insert into a leveled item list
-    /// 2 if form is a leveled item list
-    /// 3 if form can insert into a leveled npc list
-    /// 4 if form is a leveled npc list
-    /// 5 if form can insert into a leveled spell list
-    /// 6 if form is a leveled spell list
+    /// 2 if form is armor, can insert into leveled list or outfit
+    /// 3 if form is a leveled item list
+    /// 4 if form can insert into a leveled npc list
+    /// 5 if form is a leveled npc list
+    /// 6 if form can insert into a leveled spell list
+    /// 7 if form is a leveled spell list
     /// </returns>
     static int CheckFormType(const RE::TESForm* form);
 
-    static bool CheckCompatibleFormTypes(const std::uint8_t insert, const std::uint8_t target);
+    static bool CheckCompatibleLeveledListFormTypes(const std::uint8_t insert, const std::uint8_t target);
 
     static std::uint16_t ClampProtocol(const std::uint16_t value);
 
     static bool CompareLeveledListEntryLevel(const RE::LEVELED_OBJECT& a, const RE::LEVELED_OBJECT& b);
+
+    static bool CheckCompatibleOutfitFormTypes(const std::uint8_t insert, const std::uint8_t target);
+
+    static bool CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const std::uint8_t target);
 };

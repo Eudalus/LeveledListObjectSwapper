@@ -490,7 +490,31 @@ bool Manager::DirectProtocol(ItemData& data)
 {
     const auto protocol = data.protocol;
 
-    if (Utility::CheckCompatibleFormTypes(data.insertFormType, data.targetFormType)) // check if form types are compatible
+    //if (Utility::CheckCompatibleOutfitFormTypes(data.insertFormType, data.targetFormType))
+    if(Utility::CheckCompatibleKeywordFormTypes(data.insertFormType, data.targetFormType))
+    {
+        if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_MAX))
+        {
+            data.processCounter = 1;
+            return InsertIntoBatchMap(data);
+        }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_INSERT_MAX))
+        {
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            return InsertIntoBatchMap(data);
+        }
+        else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_REMOVE_MAX))
+        {
+            data.processCounter = 1;
+            return InsertIntoBatchMap(data);
+        }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_REMOVE_MAX))
+        {
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            return InsertIntoBatchMap(data);
+        }
+    }
+    else if (Utility::CheckCompatibleLeveledListFormTypes(data.insertFormType, data.targetFormType)) // check if form types are compatible
     {
         if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_MAX))
         {
@@ -528,10 +552,10 @@ bool Manager::DirectProtocol(ItemData& data)
             return InsertIntoFocusMapRemove(data);
         }
     }
-    else // form types are not compatible
+    else if((data.targetFormType >= Data::ITEM_FORM_TYPE) && (data.targetFormType <= Data::LEVELED_SPELL_FORM_TYPE)) // form types are not compatible, exclude keyword formtype
     {
         // check to see if protocol doesn't require valid insert
-        // target already confirmed beforehand in LoadData, add to appropriate map
+        // add to appropriate map
         switch (protocol)
 	    {
 		case Data::VALID_SINGLE_PROTOCOL_NO_INSERT_REMOVE:

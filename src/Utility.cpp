@@ -287,11 +287,12 @@ void Utility::SortLeveledListArrayByLevel(RE::SimpleArray<RE::LEVELED_OBJECT> &e
 /// <returns>
 /// 0 if form is null or form is not an acceptable form type
 /// 1 if form can insert into a leveled item list
-/// 2 if form is a leveled item list
-/// 3 if form can insert into a leveled npc list
-/// 4 if form is a leveled npc list
-/// 5 if form can insert into a leveled spell list
-/// 6 if form is a leveled spell list
+/// 2 if form is armor, can insert into leveled list or outfit
+/// 3 if form is a leveled item list
+/// 4 if form can insert into a leveled npc list
+/// 5 if form is a leveled npc list
+/// 6 if form can insert into a leveled spell list
+/// 7 if form is a leveled spell list
 /// </returns>
 int Utility::CheckFormType(const RE::TESForm *form)
 {
@@ -301,9 +302,11 @@ int Utility::CheckFormType(const RE::TESForm *form)
 
         switch (formType)
         {
-        // ITEM
+        // ARMOR
         case RE::FormType::Armor:
-            return Data::ITEM_FORM_TYPE;
+            return Data::ARMOR_FORM_TYPE;
+
+        // ITEM
         case RE::FormType::Weapon:
             return Data::ITEM_FORM_TYPE;
         case RE::FormType::Misc:
@@ -350,13 +353,14 @@ int Utility::CheckFormType(const RE::TESForm *form)
     return Data::INVALID_FORM_TYPE;
 }
 
-bool Utility::CheckCompatibleFormTypes(const std::uint8_t insert, const std::uint8_t target)
+bool Utility::CheckCompatibleLeveledListFormTypes(const std::uint8_t insert, const std::uint8_t target)
 {
     if ((insert == Data::INVALID_FORM_TYPE) || (target == Data::INVALID_FORM_TYPE))
     {
         return false;
     }
-    else if ((insert == Data::ITEM_FORM_TYPE && ((target == Data::ITEM_FORM_TYPE) || (target == Data::LEVELED_ITEM_FORM_TYPE))) || (insert == Data::LEVELED_ITEM_FORM_TYPE && ((target == Data::ITEM_FORM_TYPE) || (target == Data::LEVELED_ITEM_FORM_TYPE))))
+    //else if ((insert == Data::ITEM_FORM_TYPE && ((target == Data::ITEM_FORM_TYPE) || (target == Data::LEVELED_ITEM_FORM_TYPE))) || (insert == Data::LEVELED_ITEM_FORM_TYPE && ((target == Data::ITEM_FORM_TYPE) || (target == Data::LEVELED_ITEM_FORM_TYPE))))
+    else if(((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)))
     {
         return true;
     }
@@ -393,4 +397,28 @@ std::uint16_t Utility::ClampProtocol(const std::uint16_t value)
 bool Utility::CompareLeveledListEntryLevel(const RE::LEVELED_OBJECT& a, const RE::LEVELED_OBJECT& b)
 {
     return a.level < b.level;
+}
+
+bool Utility::CheckCompatibleOutfitFormTypes(const std::uint8_t insert, const std::uint8_t target)
+{
+    /*
+    if (((target >= Data::ARMOR_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)) && ((insert >= Data::ARMOR_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)))
+    {
+        return true;
+    }
+    */
+
+    return (((target >= Data::ARMOR_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)) && ((insert >= Data::ARMOR_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)));
+}
+
+bool Utility::CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const std::uint8_t target)
+{
+    /*
+    if ((insert == Data::KEYWORD_FORM_TYPE) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_SPELL_FORM_TYPE)))
+    {
+        return true;
+    }
+    */
+
+    return ((insert == Data::KEYWORD_FORM_TYPE) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_SPELL_FORM_TYPE)));
 }

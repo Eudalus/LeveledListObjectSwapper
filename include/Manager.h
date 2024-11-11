@@ -3,6 +3,7 @@
 #include "SmallerLeveledObject.h"
 #include "ItemData.h"
 #include "SmallerItemData.h"
+#include "TinyItemData.h"
 #include <unordered_map>
 #include <vector>
 
@@ -45,6 +46,14 @@ public:
     std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> itemLeveledHybridMap;
     std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> npcLeveledHybridMap;
     std::unordered_map<RE::FormID, std::pair<std::vector<ItemData>, std::unordered_map<RE::FormID, std::vector<SmallerItemData>>>> spellLeveledHybridMap;
+
+    // ----- KEYWORD MAPS -----
+    std::unordered_map<RE::FormID, std::vector<ItemData>> itemKeywordMap;
+    std::unordered_map<RE::FormID, std::vector<ItemData>> npcKeywordMap;
+    std::unordered_map<RE::FormID, std::vector<ItemData>> spellKeywordMap;
+
+    // ----- OUTFIT MAP -----
+    std::unordered_map<RE::FormID, std::vector<TinyItemData>> itemOutfitMap;
 
     std::default_random_engine randomEngine;
 

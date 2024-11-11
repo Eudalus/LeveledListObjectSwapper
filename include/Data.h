@@ -8,15 +8,19 @@ namespace Data
 
     // item
     inline const std::int8_t ITEM_FORM_TYPE = 1;
-    inline const std::int8_t LEVELED_ITEM_FORM_TYPE = 2;
+    inline const std::int8_t ARMOR_FORM_TYPE = 2;
+    inline const std::int8_t LEVELED_ITEM_FORM_TYPE = 3;
 
     // npc
-    inline const std::int8_t NPC_FORM_TYPE = 3;
-    inline const std::int8_t LEVELED_NPC_FORM_TYPE = 4;
+    inline const std::int8_t NPC_FORM_TYPE = 4;
+    inline const std::int8_t LEVELED_NPC_FORM_TYPE = 5;
 
     // spell
-    inline const std::int8_t SPELL_FORM_TYPE = 5;
-    inline const std::int8_t LEVELED_SPELL_FORM_TYPE = 6;
+    inline const std::int8_t SPELL_FORM_TYPE = 6;
+    inline const std::int8_t LEVELED_SPELL_FORM_TYPE = 7;
+
+    // keyword
+    inline const std::int8_t KEYWORD_FORM_TYPE = 8;
 
     // ----- PROTOCOL -----
 
@@ -64,6 +68,10 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN = 350;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_BASIC = 350;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX = 350;
+
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MIN = 400;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_BASIC = 400;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MAX = 400;
 
     // ----- LEVELED LIST ENTRY -----
     inline const std::size_t MAX_ENTRY_SIZE = 255; // you'd think 256, but nope
