@@ -116,17 +116,17 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             }
 
             // ----- BATCH FUNCTIONS -----
-            if (!manager.itemMap.empty())
+            if (!manager.itemMap.empty() || !manager.itemKeywordMap.empty())
             {
-                manager.ProcessBatchLeveledList<RE::TESLevItem>(RE::FormType::LeveledItem, manager.itemMap);
+                manager.ProcessBatchLeveledList<RE::TESLevItem>(RE::FormType::LeveledItem, manager.itemMap, manager.itemKeywordMap);
             }
-            if (!manager.npcMap.empty())
+            if (!manager.npcMap.empty() || !manager.npcKeywordMap.empty())
             {
-                manager.ProcessBatchLeveledList<RE::TESLevCharacter>(RE::FormType::LeveledNPC, manager.npcMap);
+                manager.ProcessBatchLeveledList<RE::TESLevCharacter>(RE::FormType::LeveledNPC, manager.npcMap, manager.npcKeywordMap);
             }
-            if (!manager.spellMap.empty())
+            if (!manager.spellMap.empty() || !manager.spellKeywordMap.empty())
             {
-                manager.ProcessBatchLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell, manager.spellMap);
+                manager.ProcessBatchLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell, manager.spellMap, manager.spellKeywordMap);
             }
 
             logger::info("{} unique leveled lists batch modified", manager.uniqueListBatchModified);

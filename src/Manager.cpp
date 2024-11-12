@@ -167,7 +167,7 @@ bool Manager::LoadData()
 }
 
 
-template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map)
+template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& keywordMap)
 {
     const auto dataHandler = RE::TESDataHandler::GetSingleton();
     const auto& lists = dataHandler->GetFormArray(formType);
@@ -187,6 +187,7 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
     size_t newListSize;
     size_t currentItemsSize;
     size_t resetVectorSize;
+    size_t currentKeywordItemsSize;
 
     std::uniform_real_distribution<float> randomDistributor(0.0f, 99.99f);
 
@@ -194,6 +195,7 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
     bool resizePending;
     bool keepOriginal;
     bool listDoesNotUseAll;
+    bool keywordSearching = !keywordMap.empty();
 
     resetVector.reserve(Data::MAX_ENTRY_SIZE);
 
@@ -255,6 +257,54 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
                                     ++totalListUseAllSkips;
                                 }
                             }
+                        }
+                    }
+
+                    if (auto keywordForm = currentForm->As<RE::BGSKeywordForm>(); keywordForm && keywordSearching)
+                    {
+                        for (uint32_t x = 0; (x < keywordForm->numKeywords) && ongoing; ++x)
+                        {
+                            if (auto currentKeyword = keywordForm->GetKeywordAt(x); currentKeyword.has_value())
+                            {
+                                if (auto keywordMapIterator = keywordMap.find(currentKeyword.value()->formID); keywordMapIterator != keywordMap.end())
+                                {
+                                    std::vector<ItemData>& currentKeywordItems = keywordMapIterator->second;
+
+                                    currentKeywordItemsSize = std::min(Data::MAX_ENTRY_SIZE - insertBufferElements, currentKeywordItems.size());
+
+                                    for (size_t y = 0; (y < currentKeywordItemsSize) && ongoing; ++y)
+                                    {
+                                        if (currentKeywordItems[y].processCounter > 0)
+                                        {
+                                            if (listDoesNotUseAll || currentKeywordItems[y].useAll)
+                                            {
+                                                if (randomDistributor(randomEngine) < currentKeywordItems[y].chance)
+                                                {
+                                                    if (ProcessBatchProtocol(currentKeywordItems[y], currentEntries[j], insertBufferElements, insertBuffer, keepOriginal, resetVector))
+                                                    {
+                                                        resizePending = true;
+                                                    }
+
+                                                    if (insertBufferElements >= Data::MAX_ENTRY_SIZE)
+                                                    {
+                                                        // won't be able to insert more items into list
+                                                        ongoing = false;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    ++totalListChanceSkips;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                ++totalListUseAllSkips;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
                         }
                     }
                 }
@@ -350,9 +400,9 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
 }
 
 // necessary signatures for the linker
-template bool Manager::ProcessBatchLeveledList<RE::TESLevItem>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
-template bool Manager::ProcessBatchLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
-template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevItem>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& keywordMap);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevCharacter>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& keywordMap);
+template bool Manager::ProcessBatchLeveledList<RE::TESLevSpell>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& keywordMap);
 
 template<typename T> bool Manager::ProcessFocusLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map)
 {
@@ -496,22 +546,22 @@ bool Manager::DirectProtocol(ItemData& data)
         if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_MAX))
         {
             data.processCounter = 1;
-            //return InsertIntoBatchMap(data);
+            return InsertIntoKeywordMap(data);
         }
         else if ((protocol >= Data::VALID_MULTI_PROTOCOL_INSERT_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_INSERT_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
-            //return InsertIntoBatchMap(data);
+            return InsertIntoKeywordMap(data);
         }
         else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_REMOVE_MAX))
         {
             data.processCounter = 1;
-            //return InsertIntoBatchMap(data);
+            return InsertIntoKeywordMap(data);
         }
         else if ((protocol >= Data::VALID_MULTI_PROTOCOL_REMOVE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_REMOVE_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
-            //return InsertIntoBatchMap(data);
+            return InsertIntoKeywordMap(data);
         }
     }
     else if (Utility::CheckCompatibleLeveledListFormTypes(data.insertFormType, data.targetFormType)) // check if form types are compatible
@@ -578,6 +628,7 @@ bool Manager::InsertIntoBatchMap(ItemData& data)
     switch (data.targetFormType)
 	{
     case Data::ITEM_FORM_TYPE:
+    case Data::ARMOR_FORM_TYPE:
     case Data::LEVELED_ITEM_FORM_TYPE:
         
         return InsertIntoCommonMap(data, itemMap);
@@ -737,6 +788,31 @@ bool Manager::InsertIntoWeirdMapRemove(ItemData& data, boost::unordered_flat_map
 
         return true;
     }
+
+    ++removedDataCounter;
+    return false;
+}
+
+bool Manager::InsertIntoKeywordMap(ItemData& data)
+{
+    // Might need valid insert field present for removals only if implemented to differentiate from item lists, npc lists, and spell lists
+    // could create a universal key map, but they would require more hash lookups if not more loops
+    switch (data.insertFormType) // has to use insertFormType since targetFormType should be keyword.
+	{
+    case Data::ITEM_FORM_TYPE:
+    case Data::ARMOR_FORM_TYPE:
+    case Data::LEVELED_ITEM_FORM_TYPE:
+        
+        return InsertIntoCommonMap(data, itemKeywordMap);
+    case Data::NPC_FORM_TYPE:
+    case Data::LEVELED_NPC_FORM_TYPE:
+        
+        return InsertIntoCommonMap(data, npcKeywordMap);
+    case Data::SPELL_FORM_TYPE:
+    case Data::LEVELED_SPELL_FORM_TYPE:
+        
+        return InsertIntoCommonMap(data, spellKeywordMap);
+	}
 
     ++removedDataCounter;
     return false;

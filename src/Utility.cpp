@@ -337,6 +337,9 @@ int Utility::CheckFormType(const RE::TESForm *form)
             return Data::SPELL_FORM_TYPE;
         case RE::FormType::LeveledSpell:
             return Data::LEVELED_SPELL_FORM_TYPE;
+        // KEYWORD
+        case RE::FormType::Keyword:
+            return Data::KEYWORD_FORM_TYPE;
 
         // ITEM AGAIN
         case RE::FormType::KeyMaster:
@@ -414,11 +417,11 @@ bool Utility::CheckCompatibleOutfitFormTypes(const std::uint8_t insert, const st
 bool Utility::CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const std::uint8_t target)
 {
     /*
-    if ((insert == Data::KEYWORD_FORM_TYPE) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_SPELL_FORM_TYPE)))
+    if ((target == Data::KEYWORD_FORM_TYPE) && ((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_SPELL_FORM_TYPE)))
     {
         return true;
     }
     */
 
-    return ((insert == Data::KEYWORD_FORM_TYPE) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_SPELL_FORM_TYPE)));
+    return ((target == Data::KEYWORD_FORM_TYPE) && ((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_SPELL_FORM_TYPE)));
 }

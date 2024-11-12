@@ -15,7 +15,7 @@ class Manager
 public:
     bool LoadData();
     
-    template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
+    template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& keywordMap);
     template<typename T> bool ProcessFocusLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
 
     bool DirectProtocol(ItemData& data);
@@ -25,6 +25,7 @@ public:
     bool InsertIntoCommonMap(ItemData& data, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map);
     bool InsertIntoWeirdMapAdd(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
     bool InsertIntoWeirdMapRemove(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+    bool InsertIntoKeywordMap(ItemData& data);
 
     // Note that insertBufferElements is not capacity, Data::MAX_ENTRY_SIZE (255) will be array max capacity
     bool ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal, std::vector<ItemData*>& resetVector);
