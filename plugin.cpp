@@ -129,6 +129,12 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 manager.ProcessBatchLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell, manager.spellMap, manager.spellKeywordMap);
             }
 
+            // ----- OUTFIT FUNCTION -----
+            if (manager.GenerateOutfitLeveledLists())
+            {
+                manager.ProcessBatchOutfit();
+            }
+
             logger::info("{} unique leveled lists batch modified", manager.uniqueListBatchModified);
             logger::info("{} unique target leveled lists modified", manager.uniqueListFocusModified);
             logger::info("{} total leveled list insertions", manager.totalListInserts);

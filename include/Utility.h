@@ -3,6 +3,7 @@
 #include "SimpleIni.h"
 #include "ItemData.h"
 #include "SmallerItemData.h"
+#include "OutfitItemData.h"
 
 class Utility
 {
@@ -65,4 +66,6 @@ public:
     static bool CheckCompatibleOutfitFormTypes(const std::uint8_t insert, const std::uint8_t target);
 
     static bool CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const std::uint8_t target);
+
+    static RE::TESLevItem* CreateOutfitLeveledItemList(std::vector<OutfitItemData>& list);
 };

@@ -601,6 +601,12 @@ bool Manager::DirectProtocol(ItemData& data)
             data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoFocusMapRemove(data);
         }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MIN))
+        {
+            //data.processCounter = Data::MAX_ENTRY_SIZE;
+            return InsertIntoOutfitMap(data);
+        }
+
     } // maybe allow keyword formtype through to remove any items with those keywords from all leveled lists?
     else if((data.targetFormType >= Data::ITEM_FORM_TYPE) && (data.targetFormType <= Data::LEVELED_SPELL_FORM_TYPE)) // form types are not compatible, exclude keyword formtype
     {
@@ -1107,4 +1113,85 @@ void Manager::InsertLeveledListVectorBuffer(const std::size_t insertLimit, std::
         entries[(j + originalBufferElements)].count = (rand() % (insertDataVector[j].maxCount - insertDataVector[j].minCount + 1)) + insertDataVector[j].minCount;
         entries[(j + originalBufferElements)].level = (rand() % (insertDataVector[j].maxLevel - insertDataVector[j].minLevel + 1)) + insertDataVector[j].minLevel;
     }
+}
+
+
+bool Manager::InsertIntoOutfitMap(ItemData& data)
+{
+    if (Utility::CheckCompatibleOutfitFormTypes(data.insertFormType, data.targetFormType))
+    {
+        if (auto mapIterator = itemOutfitMap.find(data.targetForm->formID); mapIterator != itemOutfitMap.end())
+        {
+            mapIterator->second.second.emplace_back(data);
+
+            ++totalDataSize;
+
+            return true;
+        }
+        else
+        {
+            itemOutfitMap.emplace(data.targetForm->formID, std::pair<RE::TESLevItem*, std::vector<OutfitItemData>>());
+            itemOutfitMap.at(data.targetForm->formID).second.emplace_back(data);
+
+            ++totalTargetSize;
+            ++totalDataSize;
+
+            return true;
+        }
+    }
+
+    ++wrongDataCounter;
+    return false;
+}
+
+bool Manager::ProcessBatchOutfit()
+{
+    auto& outfitList = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::BGSOutfit>();
+    size_t outfitListSize = outfitList.size();
+    size_t outfitItemsSize;
+
+    for (size_t i = 0; i < outfitListSize; ++i)
+    {
+        if (outfitList[i])
+        {
+            auto& outfitItems = outfitList[i]->outfitItems;
+            outfitItemsSize = outfitItems.size();
+
+            for (size_t k = 0; k < outfitItemsSize; ++k)
+            {
+                if (outfitItems[k])
+                {
+                    if (auto mapIterator = itemOutfitMap.find(outfitItems[k]->formID); mapIterator != itemOutfitMap.end())
+                    {
+                        if (mapIterator->second.first)
+                        {
+                            outfitItems[k] = mapIterator->second.first;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Manager::GenerateOutfitLeveledLists()
+{
+    bool generated = false;
+
+    for (auto& [targetKey, pairValue] : itemOutfitMap)
+    {
+        if (!pairValue.first)
+        {
+            pairValue.first = Utility::CreateOutfitLeveledItemList(pairValue.second);
+
+            if (pairValue.first)
+            {
+                generated = true;
+            }
+        }
+    }
+
+    return generated;
 }

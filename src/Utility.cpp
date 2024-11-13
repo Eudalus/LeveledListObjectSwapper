@@ -358,12 +358,13 @@ int Utility::CheckFormType(const RE::TESForm *form)
 
 bool Utility::CheckCompatibleLeveledListFormTypes(const std::uint8_t insert, const std::uint8_t target)
 {
+    /* // unnecessary check?
     if ((insert == Data::INVALID_FORM_TYPE) || (target == Data::INVALID_FORM_TYPE))
     {
         return false;
-    }
+    }*/
     //else if ((insert == Data::ITEM_FORM_TYPE && ((target == Data::ITEM_FORM_TYPE) || (target == Data::LEVELED_ITEM_FORM_TYPE))) || (insert == Data::LEVELED_ITEM_FORM_TYPE && ((target == Data::ITEM_FORM_TYPE) || (target == Data::LEVELED_ITEM_FORM_TYPE))))
-    else if(((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)))
+    if(((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)))
     {
         return true;
     }
@@ -411,7 +412,7 @@ bool Utility::CheckCompatibleOutfitFormTypes(const std::uint8_t insert, const st
     }
     */
 
-    return (((target >= Data::ARMOR_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)) && ((insert >= Data::ARMOR_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)));
+    return (((insert >= Data::ARMOR_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)) && ((target >= Data::ARMOR_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)));
 }
 
 bool Utility::CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const std::uint8_t target)
@@ -424,4 +425,51 @@ bool Utility::CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const s
     */
 
     return ((target == Data::KEYWORD_FORM_TYPE) && ((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_SPELL_FORM_TYPE)));
+}
+
+RE::TESLevItem* Utility::CreateOutfitLeveledItemList(std::vector<OutfitItemData>& list)
+{
+    if (list.empty())
+    {
+        return nullptr;
+    }
+    
+    auto& leveledItemLists = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESLevItem>();
+
+    RE::TESLevItem* value = nullptr;
+
+    const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::TESLevItem>();
+
+    uint8_t size;
+
+    if (factory)
+    {
+        value = factory->Create();
+
+        if (value)
+        {
+            size = std::min(list.size(), Data::MAX_ENTRY_SIZE);
+
+            value->entries.resize(size);
+
+            RE::SimpleArray<RE::LEVELED_OBJECT>& entries = value->entries;
+
+            for (uint8_t i = 0; i < size; ++i)
+            {
+                entries[i].form = list[i].insertForm;
+                entries[i].count = (rand() % (list[i].maxCount - list[i].minCount + 1)) + list[i].minCount;
+                entries[i].level = (rand() % (list[i].maxLevel - list[i].minLevel + 1)) + list[i].minLevel;
+                entries[i].itemExtra = nullptr;
+            }
+
+            // sort, don't need to sanitize since data insert loop handles it
+            std::sort(entries.begin(), entries.end(), Utility::CompareLeveledListEntryLevel);
+
+            value->numEntries = size;
+
+            leveledItemLists.push_back(value);
+        }
+    }
+
+    return value;
 }

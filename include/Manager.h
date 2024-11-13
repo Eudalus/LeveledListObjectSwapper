@@ -17,6 +17,7 @@ public:
     
     template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& keywordMap);
     template<typename T> bool ProcessFocusLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
+    bool ProcessBatchOutfit();
 
     bool DirectProtocol(ItemData& data);
     bool InsertIntoBatchMap(ItemData& data); // calls InsertIntoCommonMap
@@ -26,6 +27,8 @@ public:
     bool InsertIntoWeirdMapAdd(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
     bool InsertIntoWeirdMapRemove(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
     bool InsertIntoKeywordMap(ItemData& data);
+    bool InsertIntoOutfitMap(ItemData& data);
+    bool GenerateOutfitLeveledLists();
 
     // Note that insertBufferElements is not capacity, Data::MAX_ENTRY_SIZE (255) will be array max capacity
     bool ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal, std::vector<ItemData*>& resetVector);
@@ -54,7 +57,9 @@ public:
     boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> spellKeywordMap;
 
     // ----- OUTFIT MAP -----
-    boost::unordered_flat_map<RE::FormID, std::vector<OutfitItemData>> itemOutfitMap;
+    // key is target item or leveled list FormID in outfit, value pair first -> RE::TESLevItem* will be pointer to factory generated leveled list to insert in place of target
+    // value pair second -> std::vector<ItemData> will be the items to insert into the value pair first factory generated leveled list
+    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<OutfitItemData>>> itemOutfitMap;
 
     // ----- CONTAINER MAP
     // key is target item or leveled list in container, value pair first -> std::vector<ItemData> should have a leveled list generated
