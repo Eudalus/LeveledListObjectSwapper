@@ -1,6 +1,6 @@
 #pragma once
 
-/*
+
 namespace stl
 {
     using namespace SKSE::stl;
@@ -70,5 +70,3 @@ namespace InitHooks
 		static void Hook();
 	};
 }
-
-*/

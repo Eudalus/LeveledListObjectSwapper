@@ -1,6 +1,6 @@
 #include "Hooks.h"
 
-/*
+
 namespace logger = SKSE::log;
 
 namespace InitHooks
@@ -16,11 +16,23 @@ namespace InitHooks
 	{
 		_InitItemImpl(outfit);
 
-		outfitCounter += 1;
+		if (outfit->formID == 0x09D5DF)
+		{
+			for (int i = 0; i < outfit->outfitItems.size(); ++i)
+			{
+				if (outfit->outfitItems[i]->formID == 0x03452E)
+				{
+					logger::info("CHANGING OUTFIT DATA IN BGSOUTFIT -> INIT ITEM IMPL HOOK");
+					outfit->outfitItems[i] = RE::TESForm::LookupByID(0x01396B);
+				}
+			}
+		}
 
-		const auto lockpick = RE::TESForm::LookupByID(0xA);
+		//outfitCounter += 1;
 
-		logger::info("{:*^6} --- OUTFIT SIZE: {} --- FORM ID: {}", outfitCounter, (outfit ? outfit->outfitItems.size() : 0), std::format("{:x}",(lockpick ? lockpick->formID : 0)));
+		//const auto lockpick = RE::TESForm::LookupByID(0xA);
+
+		//logger::info("{:*^6} --- OUTFIT SIZE: {} --- FORM ID: {}", outfitCounter, (outfit ? outfit->outfitItems.size() : 0), std::format("{:x}",(lockpick ? lockpick->formID : 0)));
 		
 	}
 
@@ -86,4 +98,3 @@ namespace InitHooks
         _InitItemImpl = REL::Relocation<uintptr_t>(RE::VTABLE_TESLevSpell[0]).write_vfunc(0x13, InitItemImpl);
 	}
 }
-*/

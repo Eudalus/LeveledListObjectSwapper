@@ -466,7 +466,9 @@ RE::TESLevItem* Utility::CreateOutfitLeveledItemList(std::vector<OutfitItemData>
             std::sort(entries.begin(), entries.end(), Utility::CompareLeveledListEntryLevel);
 
             value->numEntries = size;
-
+            value->chanceNone = 0;
+            value->llFlags = Data::GENERATED_LEVELED_LIST_FLAGS;
+            //value->llFlags;
             leveledItemLists.push_back(value);
         }
     }

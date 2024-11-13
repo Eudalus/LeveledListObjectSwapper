@@ -95,4 +95,7 @@ public:
 
     // number of ItemData in all map vectors
     std::size_t totalDataSize = 0;
+
+    std::size_t uniqueOutfitBatchModified = 0;
+    std::size_t totalOutfitSwaps = 0;
 };

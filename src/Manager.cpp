@@ -1149,11 +1149,13 @@ bool Manager::ProcessBatchOutfit()
     auto& outfitList = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::BGSOutfit>();
     size_t outfitListSize = outfitList.size();
     size_t outfitItemsSize;
+    bool outfitModified;
 
     for (size_t i = 0; i < outfitListSize; ++i)
     {
         if (outfitList[i])
         {
+            outfitModified = false;
             auto& outfitItems = outfitList[i]->outfitItems;
             outfitItemsSize = outfitItems.size();
 
@@ -1166,9 +1168,16 @@ bool Manager::ProcessBatchOutfit()
                         if (mapIterator->second.first)
                         {
                             outfitItems[k] = mapIterator->second.first;
+                            ++totalOutfitSwaps;
+                            outfitModified = true;
                         }
                     }
                 }
+            }
+
+            if (outfitModified)
+            {
+                ++uniqueOutfitBatchModified;
             }
         }
     }

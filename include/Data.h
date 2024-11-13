@@ -103,9 +103,10 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX = 650;
     */
 
-    
-
     // ----- LEVELED LIST ENTRY -----
     inline const std::size_t MAX_ENTRY_SIZE = 255; // you'd think 256, but nope
+
+    // ----- GENERATED LEVELED LIST FLAG -----
+    inline const RE::TESLeveledList::Flag GENERATED_LEVELED_LIST_FLAGS = static_cast<RE::TESLeveledList::Flag>(static_cast<uint8_t>(RE::TESLeveledList::Flag::kCalculateFromAllLevelsLTOrEqPCLevel) | static_cast<uint8_t>(RE::TESLeveledList::Flag::kCalculateForEachItemInCount));
 }
 

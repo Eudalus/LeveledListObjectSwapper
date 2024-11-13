@@ -1,5 +1,5 @@
 #include "Manager.h"
-
+#include "Hooks.h"
 #include <ranges>
 #include <iostream>
 #include <fstream>
@@ -83,7 +83,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	else */if (a_message->type == SKSE::MessagingInterface::kPostPostLoad)
 	{
         MergeMapperPluginAPI::GetMergeMapperInterface001();
-
+        InitHooks::OutfitInitItemImplHook::Hook();
 	}
     else if (a_message->type == SKSE::MessagingInterface::kDataLoaded)
     {
@@ -135,12 +135,17 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 manager.ProcessBatchOutfit();
             }
 
+            logger::info("{:*^30}", "LEVELED LISTS");
             logger::info("{} unique leveled lists batch modified", manager.uniqueListBatchModified);
             logger::info("{} unique target leveled lists modified", manager.uniqueListFocusModified);
             logger::info("{} total leveled list insertions", manager.totalListInserts);
             logger::info("{} total leveled list removals", manager.totalListRemovals);
             logger::info("{} total leveled list modifications randomly chance skipped", manager.totalListChanceSkips);
             logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListChanceSkips);
+
+            logger::info("{:*^30}", "OUTFITS");
+            logger::info("{} unique outfits batch modified", manager.uniqueOutfitBatchModified);
+            logger::info("{} total outfit item swaps", manager.totalOutfitSwaps);
         }
         
         end = std::chrono::system_clock::now();
