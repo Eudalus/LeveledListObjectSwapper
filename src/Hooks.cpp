@@ -10,6 +10,8 @@ namespace InitHooks
 	static std::size_t itemCounter = 0;
 	static std::size_t npcCounter = 0;
 	static std::size_t spellCounter = 0;
+	static size_t objectCounter = 0;
+	static size_t realObjectCounter = 0;
 
 	// ----- OUTFIT
 	void OutfitInitItemImplHook::InitItemImpl(RE::BGSOutfit* outfit)
@@ -23,6 +25,8 @@ namespace InitHooks
 				if (outfit->outfitItems[i]->formID == 0x03452E)
 				{
 					logger::info("CHANGING OUTFIT DATA IN BGSOUTFIT -> INIT ITEM IMPL HOOK");
+					logger::info("OUTFIT FORM FLAGS: {}", outfit->formFlags);
+					logger::info("OUTFIT IN GAME FORM FLAGS: {}", static_cast<size_t>(outfit->inGameFormFlags.get()));
 					outfit->outfitItems[i] = RE::TESForm::LookupByID(0x01396B);
 				}
 			}
@@ -96,5 +100,93 @@ namespace InitHooks
 	{
 		// 0x13 address of InitItemImpl function
         _InitItemImpl = REL::Relocation<uintptr_t>(RE::VTABLE_TESLevSpell[0]).write_vfunc(0x13, InitItemImpl);
+	}
+
+	void TESObjectREFRInitItemImplHook::InitItemImpl(RE::TESObjectREFR* object)
+	{
+		_InitItemImpl(object);
+
+
+		
+	}
+
+	void TESObjectREFRInitItemImplHook::Hook()
+	{
+		// 0x13 address of InitItemImpl function
+        _InitItemImpl = REL::Relocation<uintptr_t>(RE::VTABLE_TESObjectREFR[0]).write_vfunc(0x13, InitItemImpl);
+	}
+}
+
+namespace LoadHooks
+{
+	static std::size_t objectLoadCounter = 0;
+	static std::size_t objectRealLoadCounter = 0;
+	static size_t actorLoadCounter = 0;
+	static size_t actorReadLoadCounter =0;
+	static size_t characterLoadCounter =0;
+	static size_t characterRealLoadCounter=0;
+
+	// ----- TESObjectREFR Load3D hook
+	RE::NiAVObject* TESObjectREFRLoad3DHook::Load3D(RE::TESObjectREFR* object, bool a_backgroundLoading)
+	{
+		auto value = _Load3D(object, a_backgroundLoading);
+		++objectLoadCounter;
+		if (object)
+		{
+			++objectRealLoadCounter;
+			logger::info("{:*^6} --- {:*^6} --- TESObjectREFR -> LOAD 3D HOOK --- OBJECT TYPE: {} --- OBJECT FORM ID: {} --- OBJECT NAME: {}",objectLoadCounter, objectRealLoadCounter, static_cast<size_t>(object->GetFormType()) ,std::format("{:x}",object->formID), object->GetDisplayFullName());
+		}
+
+		return value;
+	}
+
+	void TESObjectREFRLoad3DHook::Hook()
+	{
+		// 0x6A address of Load3D
+		_Load3D = REL::Relocation<uintptr_t>(RE::VTABLE_TESObjectREFR[0]).write_vfunc(0x6A, Load3D);
+	}
+
+	// ----- Actor Load3D hook
+	RE::NiAVObject* ActorLoad3DHook::Load3D(RE::Actor* object, bool a_backgroundLoading)
+	{
+		auto value = _Load3D(object, a_backgroundLoading);
+
+		++actorLoadCounter;
+		logger::info("{}", actorLoadCounter);
+		if (object)
+		{
+			++actorReadLoadCounter;
+			logger::info("{:*^6} --- {:*^6} --- Actor -> LOAD 3D HOOK --- OBJECT TYPE: {} --- OBJECT FORM ID: {} --- OBJECT NAME: {}",actorLoadCounter, actorReadLoadCounter, static_cast<size_t>(object->GetFormType()) ,std::format("{:x}",object->formID), object->GetDisplayFullName());
+		}
+
+		return value;
+	}
+
+	void ActorLoad3DHook::Hook()
+	{
+		// 0x6A address of Load3D
+		_Load3D = REL::Relocation<uintptr_t>(RE::VTABLE_Actor[0]).write_vfunc(0x6A, Load3D);
+	}
+
+	// ----- Character Load3D hook
+	RE::NiAVObject* CharacterLoad3DHook::Load3D(RE::Character* object, bool a_backgroundLoading)
+	{
+		auto value = _Load3D(object, a_backgroundLoading);
+
+		++characterLoadCounter;
+		//logger::info("{}", actorLoadCounter);
+		if (object)
+		{
+			++characterRealLoadCounter;
+			logger::info("{:*^6} --- {:*^6} --- Character -> LOAD 3D HOOK --- OBJECT TYPE: {} --- OBJECT FORM ID: {} --- OBJECT NAME: {}",characterLoadCounter, characterRealLoadCounter, static_cast<size_t>(object->GetFormType()) ,std::format("{:x}",object->formID), object->GetDisplayFullName());
+		}
+
+		return value;
+	}
+
+	void CharacterLoad3DHook::Hook()
+	{
+		// 0x6A address of Load3D
+		_Load3D = REL::Relocation<uintptr_t>(RE::VTABLE_Character[0]).write_vfunc(0x6A, Load3D);
 	}
 }

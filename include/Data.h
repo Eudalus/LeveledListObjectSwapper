@@ -34,6 +34,15 @@ namespace Data
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_BASIC_COUNT_LEVEL = 3;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_MAX = 3;
 
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_EXCLUSIVE = 20
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_EXCLUSIVE_COUNT = 21
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_EXCLUSIVE_LEVEL = 22
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_EXCLUSIVE_COUNT_LEVEL = 23
+
+    // generate and insert leveled list?
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE = 40
+    // add pair to batch maps?
+
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_MIN = 50;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_BASIC = 50;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_BASIC_COUNT = 51;
@@ -49,8 +58,13 @@ namespace Data
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_NO_INSERT_REMOVE = 104;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_MAX = 104;
 
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_REMOVE_EXCLUSIVE = 120
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_REMOVE_EXCLUSIVE_COUNT = 121
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_REMOVE_EXCLUSIVE_LEVEL = 122
+    // inline const std::int16_t VALID_SINGLE_PROTOCOL_REMOVE_EXCLUSIVE_COUNT_LEVEL = 123
+
     // remove, but replace with a generated leveled list?
-    // inline const std::uint16_t VALID_SINGLE_PROTOCOL_SWAP_BASIC = 120
+    // inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE = 140
     // add pair to batch maps?
 
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_MIN = 150;
@@ -61,7 +75,7 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_NO_INSERT_REMOVE = 154;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_MAX = 154;
 
-    // inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_BASIC = 170
+    // inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_GENERATE = 190
     
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MIN = 200;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_BASIC = 200;

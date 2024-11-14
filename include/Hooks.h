@@ -69,4 +69,51 @@ namespace InitHooks
 
 		static void Hook();
 	};
+
+	// ----- TESObjectREFR
+	class TESObjectREFRInitItemImplHook
+	{
+	public:
+		static void InitItemImpl(RE::TESObjectREFR* object);
+
+		static inline REL::Relocation<decltype(InitItemImpl)> _InitItemImpl;
+
+		static void Hook();
+	};
+}
+
+namespace LoadHooks
+{
+	// ----- TESObjectREFR Load3D hook
+	class TESObjectREFRLoad3DHook
+	{
+	public:
+		static RE::NiAVObject* Load3D(RE::TESObjectREFR* object, bool a_backgroundLoading);
+
+		static inline REL::Relocation<decltype(Load3D)> _Load3D;
+
+		static void Hook();
+	};
+
+	// ----- Actor Load3D hook
+	class ActorLoad3DHook
+	{
+	public:
+		static RE::NiAVObject* Load3D(RE::Actor* object, bool a_backgroundLoading);
+
+		static inline REL::Relocation<decltype(Load3D)> _Load3D;
+
+		static void Hook();
+	};
+
+	// ----- Character Load3D hook
+	class CharacterLoad3DHook
+	{
+	public:
+		static RE::NiAVObject* Load3D(RE::Character* object, bool a_backgroundLoading);
+
+		static inline REL::Relocation<decltype(Load3D)> _Load3D;
+
+		static void Hook();
+	};
 }

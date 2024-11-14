@@ -84,6 +84,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	{
         MergeMapperPluginAPI::GetMergeMapperInterface001();
         InitHooks::OutfitInitItemImplHook::Hook();
+        //LoadHooks::TESObjectREFRLoad3DHook::Hook();
+        //LoadHooks::ActorLoad3DHook::Hook();
+        LoadHooks::CharacterLoad3DHook::Hook();
 	}
     else if (a_message->type == SKSE::MessagingInterface::kDataLoaded)
     {
