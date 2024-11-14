@@ -83,10 +83,10 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	else */if (a_message->type == SKSE::MessagingInterface::kPostPostLoad)
 	{
         MergeMapperPluginAPI::GetMergeMapperInterface001();
-        InitHooks::OutfitInitItemImplHook::Hook();
+        //InitHooks::OutfitInitItemImplHook::Hook();
         //LoadHooks::TESObjectREFRLoad3DHook::Hook();
         //LoadHooks::ActorLoad3DHook::Hook();
-        LoadHooks::CharacterLoad3DHook::Hook();
+        
 	}
     else if (a_message->type == SKSE::MessagingInterface::kDataLoaded)
     {
@@ -136,6 +136,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             if (manager.GenerateOutfitLeveledLists())
             {
                 manager.ProcessBatchOutfit();
+                LoadHooks::CharacterLoad3DHook::Hook();
             }
 
             logger::info("{:*^30}", "LEVELED LISTS");
@@ -144,7 +145,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             logger::info("{} total leveled list insertions", manager.totalListInserts);
             logger::info("{} total leveled list removals", manager.totalListRemovals);
             logger::info("{} total leveled list modifications randomly chance skipped", manager.totalListChanceSkips);
-            logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListChanceSkips);
+            logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListUseAllSkips);
 
             logger::info("{:*^30}", "OUTFITS");
             logger::info("{} unique outfits batch modified", manager.uniqueOutfitBatchModified);

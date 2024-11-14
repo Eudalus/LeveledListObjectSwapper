@@ -3,6 +3,7 @@
 #include "Utility.h"
 #include "Data.h"
 #include <algorithm>>
+#include "UpkeepManager.h"
 
 namespace logger = SKSE::log;
 
@@ -1187,8 +1188,9 @@ bool Manager::ProcessBatchOutfit()
 
 bool Manager::GenerateOutfitLeveledLists()
 {
+    const auto upkeepManager = UpkeepManager::GetSingleton();
     bool generated = false;
-
+    
     for (auto& [targetKey, pairValue] : itemOutfitMap)
     {
         if (!pairValue.first)
@@ -1197,6 +1199,7 @@ bool Manager::GenerateOutfitLeveledLists()
 
             if (pairValue.first)
             {
+                upkeepManager->InsertLookupBatch(pairValue.first);
                 generated = true;
             }
         }

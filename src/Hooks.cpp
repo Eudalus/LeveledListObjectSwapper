@@ -1,8 +1,8 @@
 #include "Hooks.h"
-
-
+#include "UpkeepManager.h"
 namespace logger = SKSE::log;
 
+/*
 namespace InitHooks
 {
 
@@ -116,9 +116,10 @@ namespace InitHooks
         _InitItemImpl = REL::Relocation<uintptr_t>(RE::VTABLE_TESObjectREFR[0]).write_vfunc(0x13, InitItemImpl);
 	}
 }
-
+*/
 namespace LoadHooks
 {
+	/*
 	static std::size_t objectLoadCounter = 0;
 	static std::size_t objectRealLoadCounter = 0;
 	static size_t actorLoadCounter = 0;
@@ -167,18 +168,18 @@ namespace LoadHooks
 		// 0x6A address of Load3D
 		_Load3D = REL::Relocation<uintptr_t>(RE::VTABLE_Actor[0]).write_vfunc(0x6A, Load3D);
 	}
-
+	*/
 	// ----- Character Load3D hook
 	RE::NiAVObject* CharacterLoad3DHook::Load3D(RE::Character* object, bool a_backgroundLoading)
 	{
-		auto value = _Load3D(object, a_backgroundLoading);
+		auto value = _Load3D(object, a_backgroundLoading); 
 
-		++characterLoadCounter;
+		//++characterLoadCounter;
 		//logger::info("{}", actorLoadCounter);
-		if (object)
+		if (object && UpkeepManager::GetSingleton()->totalOutfitItems > 0)
 		{
-			++characterRealLoadCounter;
-			logger::info("{:*^6} --- {:*^6} --- Character -> LOAD 3D HOOK --- OBJECT TYPE: {} --- OBJECT FORM ID: {} --- OBJECT NAME: {}",characterLoadCounter, characterRealLoadCounter, static_cast<size_t>(object->GetFormType()) ,std::format("{:x}",object->formID), object->GetDisplayFullName());
+			//++characterRealLoadCounter;
+			//logger::info("{:*^6} --- {:*^6} --- Character -> LOAD 3D HOOK --- OBJECT TYPE: {} --- OBJECT FORM ID: {} --- OBJECT NAME: {}",characterLoadCounter, characterRealLoadCounter, static_cast<size_t>(object->GetFormType()) ,std::format("{:x}",object->formID), object->GetDisplayFullName());
 		}
 
 		return value;
