@@ -1,5 +1,7 @@
 #include "Hooks.h"
 #include "UpkeepManager.h"
+#include "Data.h"
+
 namespace logger = SKSE::log;
 
 /*
@@ -178,7 +180,7 @@ namespace LoadHooks
 		++characterLoadCounter;
 		//logger::info("{}", actorLoadCounter);
 		//if (object && UpkeepManager::GetSingleton()->allowOutfitCheck && UpkeepManager::GetSingleton()->CheckOutfit(object))
-		if (object)
+		if (object && object->GetInventoryCounts().size() < Data::MAX_OUTFIT_LOOKUP_SIZE)
 		{
 			
 			//object->HasOutfitItems() // needs testing

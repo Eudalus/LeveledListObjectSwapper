@@ -122,5 +122,9 @@ namespace Data
 
     // ----- GENERATED LEVELED LIST FLAG -----
     inline const RE::TESLeveledList::Flag GENERATED_LEVELED_LIST_FLAGS = static_cast<RE::TESLeveledList::Flag>(static_cast<uint8_t>(RE::TESLeveledList::Flag::kCalculateFromAllLevelsLTOrEqPCLevel) | static_cast<uint8_t>(RE::TESLeveledList::Flag::kCalculateForEachItemInCount));
+
+    // ----- MAX EXTRA DATA LOOKUP -----
+    inline const std::size_t MAX_OUTFIT_LOOKUP_SIZE = 100;
+    inline const std::size_t MAX_CONTAINER_LOOKUP_SIZE = 30;
 }
 
