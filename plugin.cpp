@@ -1,6 +1,6 @@
 #include "Manager.h"
 #include "Hooks.h"
-#include "UpkeepManager.h"
+
 #include <ranges>
 #include <iostream>
 #include <fstream>
@@ -14,6 +14,10 @@
 
 // Allows us to check if a debugger is attached (optional, see below)
 #include <Windows.h>
+
+#if defined(USING_UPKEEP_MANAGER)
+#include "UpkeepManager.h"
+#endif
 
 namespace logger = SKSE::log;
 
@@ -138,11 +142,14 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             {
                 manager.ProcessBatchOutfit();
 
+                #if defined(USING_UPKEEP_MANAGER)
+
                 // implied UpkeepManager::GetSingleton()->totalOutfitItems > 0
                 if (UpkeepManager::GetSingleton()->totalOutfitItems)
                 {
-                    LoadHooks::CharacterLoad3DHook::Hook();
+                    LoadHooks::CharacterLoad3DHook::Hook(); // comment out to disable outfit reequipping
                 }
+                #endif
             }
 
             logger::info("{:*^30}", "LEVELED LISTS");

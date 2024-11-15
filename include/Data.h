@@ -89,33 +89,42 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_BASIC = 350;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX = 350;
 
-    // remove, but replace with a generated leveled list?
+    // remove, but replace with a generated leveled list
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MIN = 450;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_BASIC = 450;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MAX = 450;
 
-    // remove, but replace with a generated leveled list?
-    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN = 500;
-    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_BASIC = 500;
-    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MAX = 500;
-
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MIN = 550;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MAX = 550;
-
-    // change values
-    /*
+    // 500 - 750 need implementation
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MIN = 500;
-    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MAX = 500;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_BASIC = 500;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_BASIC_COUNT = 501;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MAX = 501;
 
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MIN = 550;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MAX = 550;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_BASIC = 550;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_BASIC_COUNT = 551;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MAX = 551;
 
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MIN = 600;
-    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX = 600;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_BASIC = 600;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_BASIC_COUNT = 601;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX = 601;
 
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MIN = 650;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX = 650;
-    */
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_BASIC = 650;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_BASIC_COUNT = 651;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX = 651;
+
+    // remove, but replace with a generated leveled list?
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN = 700;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_BASIC = 700;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MAX = 700;
+
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MIN = 750;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_BASIC = 750;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MAX = 750;
+
+
 
     // ----- LEVELED LIST ENTRY -----
     inline const std::size_t MAX_ENTRY_SIZE = 255; // you'd think 256, but nope

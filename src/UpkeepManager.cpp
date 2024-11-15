@@ -2,6 +2,8 @@
 #include "Data.h"
 #include <vector>
 
+// Class unused, must be enabled in PCH.h
+
 bool UpkeepManager::InsertLookupItem(RE::FormID list, RE::FormID item)
 {
 	if (auto mapIterator = itemOutfitLookupMap.find(list); mapIterator != itemOutfitLookupMap.end())
@@ -158,9 +160,9 @@ bool UpkeepManager::CheckOutfit(RE::Character* character)
 			}
 		}
 
+		// make npcs reequip outfit items if not already wearing
 		if (generatedLeveledListsDetected != itemsInExtraOutfitCount)
 		{
-			
 			character->RemoveOutfitItems(character->GetActorBase()->defaultOutfit);
 			character->AddWornOutfit(character->GetActorBase()->defaultOutfit, false);
 
@@ -217,25 +219,6 @@ bool UpkeepManager::CheckOutfit(RE::Character* character)
 					++listIterator;
 				}
 			}
-
-
-			/*
-			auto& outfitItems = character->GetActorBase()->defaultOutfit->outfitItems;
-			size_t outfitItemsSize = outfitItems.size();
-			
-			const auto actorEquipManager = RE::ActorEquipManager::GetSingleton();
-
-			for (size_t i = 0; i < outfitItemsSize; ++i)
-			{
-				if (outfitItems[i])
-				{
-					//actorEquipManager->EquipObject(character, outfitItems[i]->As<RE::TESObjectARMO>(), nullptr, 1, outfitItems[i]->As<RE::TESObjectARMO>()->GetEquipSlot(), true, true, true, true);
-
-					//character->AddWornItem(outfitItems[i]->As<RE::TESBoundObject>(),0, false, 0, 0);
-				}
-			}
-			*/
-			
 		}
 	}
 

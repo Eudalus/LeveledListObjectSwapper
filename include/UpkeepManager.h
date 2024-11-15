@@ -1,6 +1,7 @@
 #pragma once
 #include "boost_unordered.hpp"
 
+// Class unused, must be enabled in PCH.h
 class UpkeepManager
 {
 public:
@@ -19,6 +20,4 @@ public:
 	boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<RE::FormID>> itemOutfitLookupMap;
 
 	size_t totalOutfitItems = 0;
-
-	bool allowOutfitCheck = true;
 };

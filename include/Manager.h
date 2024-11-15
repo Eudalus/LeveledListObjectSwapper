@@ -62,10 +62,9 @@ public:
     boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<OutfitItemData>>> itemOutfitMap;
 
     // ----- CONTAINER MAP
-    // key is target item or leveled list in container, value pair first -> std::vector<ItemData> should have a leveled list generated
+    // key is target item or leveled list in container, value pair first -> second -> std::vector<ItemData> should have a leveled list generated for value pair first -> first -> RE::TESLevItem*
     // value pair second -> std::vector<ItemData> should just be inserted, swapped, or cause target removal
-    boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, std::vector<ItemData>>> itemContainerMap;
-
+    boost::unordered_flat_map<RE::FormID, std::pair<std::pair<RE::TESLevItem*, std::vector<ItemData>>, std::vector<ItemData>>> itemContainerMap;
 
     std::default_random_engine randomEngine;
 
