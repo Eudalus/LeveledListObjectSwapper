@@ -1,5 +1,6 @@
 #include "Manager.h"
 #include "Hooks.h"
+#include "UpkeepManager.h"
 #include <ranges>
 #include <iostream>
 #include <fstream>
@@ -136,7 +137,12 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             if (manager.GenerateOutfitLeveledLists())
             {
                 manager.ProcessBatchOutfit();
-                LoadHooks::CharacterLoad3DHook::Hook();
+
+                // implied UpkeepManager::GetSingleton()->totalOutfitItems > 0
+                if (UpkeepManager::GetSingleton()->totalOutfitItems)
+                {
+                    LoadHooks::CharacterLoad3DHook::Hook();
+                }
             }
 
             logger::info("{:*^30}", "LEVELED LISTS");

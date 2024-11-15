@@ -124,9 +124,10 @@ namespace LoadHooks
 	static std::size_t objectRealLoadCounter = 0;
 	static size_t actorLoadCounter = 0;
 	static size_t actorReadLoadCounter =0;
+	*/
 	static size_t characterLoadCounter =0;
 	static size_t characterRealLoadCounter=0;
-
+	/*
 	// ----- TESObjectREFR Load3D hook
 	RE::NiAVObject* TESObjectREFRLoad3DHook::Load3D(RE::TESObjectREFR* object, bool a_backgroundLoading)
 	{
@@ -174,12 +175,29 @@ namespace LoadHooks
 	{
 		auto value = _Load3D(object, a_backgroundLoading); 
 
-		//++characterLoadCounter;
+		++characterLoadCounter;
 		//logger::info("{}", actorLoadCounter);
-		if (object && UpkeepManager::GetSingleton()->totalOutfitItems > 0)
+		//if (object && UpkeepManager::GetSingleton()->allowOutfitCheck && UpkeepManager::GetSingleton()->CheckOutfit(object))
+		if (object)
 		{
-			//++characterRealLoadCounter;
-			//logger::info("{:*^6} --- {:*^6} --- Character -> LOAD 3D HOOK --- OBJECT TYPE: {} --- OBJECT FORM ID: {} --- OBJECT NAME: {}",characterLoadCounter, characterRealLoadCounter, static_cast<size_t>(object->GetFormType()) ,std::format("{:x}",object->formID), object->GetDisplayFullName());
+			
+			//object->HasOutfitItems() // needs testing
+			++characterRealLoadCounter;
+			logger::info("{:*^6} --- {:*^6} --- Character -> LOAD 3D HOOK --- OBJECT TYPE: {} --- OBJECT FORM ID: {} --- OBJECT NAME: {}",characterLoadCounter, characterRealLoadCounter, static_cast<size_t>(object->GetFormType()) ,std::format("{:x}",object->formID), object->GetDisplayFullName());
+			UpkeepManager::GetSingleton()->CheckOutfit(object);
+			//UpkeepManager::GetSingleton()->allowOutfitCheck = false;
+			
+			/*
+			object->RemoveOutfitItems(object->GetActorBase()->defaultOutfit);
+			object->AddWornOutfit(object->GetActorBase()->defaultOutfit, false);
+
+			object->RemoveOutfitItems(object->GetActorBase()->sleepOutfit);
+			object->AddWornOutfit(object->GetActorBase()->sleepOutfit, false);
+
+			object->InitInventoryIfRequired(false);
+			*/
+
+			//UpkeepManager::GetSingleton()->allowOutfitCheck = true;
 		}
 
 		return value;

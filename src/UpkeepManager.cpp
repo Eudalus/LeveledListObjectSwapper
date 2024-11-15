@@ -1,5 +1,6 @@
 #include "UpkeepManager.h"
 #include "Data.h"
+#include <vector>
 
 bool UpkeepManager::InsertLookupItem(RE::FormID list, RE::FormID item)
 {
@@ -68,11 +69,174 @@ bool UpkeepManager::InsertLookupBatch(RE::TESLevItem* list)
 	return false;
 }
 
-bool UpkeepManager::ProcessOutfit(RE::Character* character)
+bool UpkeepManager::CheckOutfit(RE::Character* character)
 {
-	if (character)
+	if (character && (!character->IsDead()))
 	{
+		std::vector<boost::unordered_flat_set<RE::FormID>*> generatedLeveledListItems;
 
+		size_t itemsInExtraOutfitCount = 0;
+		size_t generatedLeveledListsDetected;
+
+		// check original outfit form for generated leveled lists
+		auto actorBase = character->GetActorBase();
+
+		if (actorBase)
+		{
+			if (actorBase->defaultOutfit)
+			{
+				auto& outfitItems = actorBase->defaultOutfit->outfitItems;
+				size_t outfitItemsSize = outfitItems.size();
+				
+				for (size_t i = 0; i < outfitItemsSize; ++i)
+				{
+					if (outfitItems[i])
+					{
+						if (auto mapIterator = itemOutfitLookupMap.find(outfitItems[i]->formID); mapIterator != itemOutfitLookupMap.end())
+						{
+							// ExtraOutfitItem also contains a FormID to its BGSOutfit, use instead of ActorBase?
+							generatedLeveledListItems.push_back(&(mapIterator->second));
+						}
+					}
+				}
+			}
+		}
+
+		generatedLeveledListsDetected = generatedLeveledListItems.size();
+
+		// check outfit extra data (outfit in inventory / equipped)
+		if (generatedLeveledListsDetected)
+		{
+			auto inventoryChanges = character->GetInventoryChanges();
+
+			if (inventoryChanges)
+			{
+				auto& entryList = inventoryChanges->entryList;
+				auto listIterator = entryList->begin();
+
+				while (listIterator != entryList->end())
+				{
+					if ((*listIterator))
+					{
+						auto extraLists = (*listIterator)->extraLists;
+
+						if (extraLists)
+						{
+							auto extraIterator = extraLists->begin();
+
+							while (extraIterator != extraLists->end())
+							{
+								if ((*extraIterator))
+								{
+									auto dataIterator = (*extraIterator)->begin();
+
+									while (dataIterator != (*extraIterator)->end())
+									{
+										if (dataIterator->GetType() == RE::ExtraDataType::kOutfitItem)
+										{
+											for (size_t k = 0; k < generatedLeveledListsDetected; ++k)
+											{
+												// add countDelta check on InventoryEntryData ((*listIterator)) compared to character->GetContainer()'s count?
+												if ((*listIterator)->object && generatedLeveledListItems[k]->count((*listIterator)->object->formID))
+												{
+													++itemsInExtraOutfitCount;
+												}
+											}
+										}
+
+										++dataIterator;
+									}
+								}
+
+								++extraIterator;
+							}
+						}
+					}
+
+					++listIterator;
+				}
+			}
+		}
+
+		if (generatedLeveledListsDetected != itemsInExtraOutfitCount)
+		{
+			
+			character->RemoveOutfitItems(character->GetActorBase()->defaultOutfit);
+			character->AddWornOutfit(character->GetActorBase()->defaultOutfit, false);
+
+			character->RemoveOutfitItems(character->GetActorBase()->sleepOutfit);
+			character->AddWornOutfit(character->GetActorBase()->sleepOutfit, false);
+
+			character->InitInventoryIfRequired(false);
+
+			auto inventoryChanges = character->GetInventoryChanges();
+			const auto actorEquipManager = RE::ActorEquipManager::GetSingleton();
+
+			if (inventoryChanges)
+			{
+				auto& entryList = inventoryChanges->entryList;
+				auto listIterator = entryList->begin();
+
+				while (listIterator != entryList->end())
+				{
+					if ((*listIterator))
+					{
+						auto extraLists = (*listIterator)->extraLists;
+
+						if (extraLists)
+						{
+							auto extraIterator = extraLists->begin();
+
+							while (extraIterator != extraLists->end())
+							{
+								if ((*extraIterator))
+								{
+									auto dataIterator = (*extraIterator)->begin();
+
+									while (dataIterator != (*extraIterator)->end())
+									{
+										if (dataIterator->GetType() == RE::ExtraDataType::kOutfitItem)
+										{
+											auto armor = (*listIterator)->object ? (*listIterator)->object->As<RE::TESObjectARMO>() : nullptr;
+
+											if (armor)
+											{
+												actorEquipManager->EquipObject(character, armor, nullptr, 1, armor->GetEquipSlot(), true, false, true, true);
+											}
+										}
+
+										++dataIterator;
+									}
+								}
+
+								++extraIterator;
+							}
+						}
+					}
+
+					++listIterator;
+				}
+			}
+
+
+			/*
+			auto& outfitItems = character->GetActorBase()->defaultOutfit->outfitItems;
+			size_t outfitItemsSize = outfitItems.size();
+			
+			const auto actorEquipManager = RE::ActorEquipManager::GetSingleton();
+
+			for (size_t i = 0; i < outfitItemsSize; ++i)
+			{
+				if (outfitItems[i])
+				{
+					//actorEquipManager->EquipObject(character, outfitItems[i]->As<RE::TESObjectARMO>(), nullptr, 1, outfitItems[i]->As<RE::TESObjectARMO>()->GetEquipSlot(), true, true, true, true);
+
+					//character->AddWornItem(outfitItems[i]->As<RE::TESBoundObject>(),0, false, 0, 0);
+				}
+			}
+			*/
+			
+		}
 	}
 
 	return false;

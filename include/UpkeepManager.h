@@ -12,11 +12,13 @@ public:
 
 	bool InsertLookupItem(RE::FormID list, RE::FormID item);
 	bool InsertLookupBatch(RE::TESLevItem* list);
-	bool ProcessOutfit(RE::Character* character);
+	bool CheckOutfit(RE::Character* character);
 
 	// key is generated leveled list and value is all of the contents of the generated level list
 	//boost::unordered_flat_map<RE::TESLevItem*, boost::unordered_flat_set<RE::TESForm*>> itemOutfitLookupMap;
 	boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<RE::FormID>> itemOutfitLookupMap;
 
 	size_t totalOutfitItems = 0;
+
+	bool allowOutfitCheck = true;
 };
