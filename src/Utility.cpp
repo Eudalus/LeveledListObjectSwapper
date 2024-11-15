@@ -475,3 +475,9 @@ RE::TESLevItem* Utility::CreateOutfitLeveledItemList(std::vector<OutfitItemData>
 
     return value;
 }
+
+bool Utility::CheckCompatibleContainerFormTypes(const std::uint8_t insert, const std::uint8_t target)
+{
+
+    return (((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)));
+}

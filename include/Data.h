@@ -26,6 +26,8 @@ namespace Data
 
     inline const std::uint16_t DEFAULT_PROTOCAL_VALUE = 0;
 
+    // ----- BATCH LEVELED LIST SINGLE INSERTION PROTOCOLS -----
+
     // needs to be consistent with existing protocols
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_MIN = 0;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_BASIC = 0;
@@ -43,12 +45,16 @@ namespace Data
     // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE = 40
     // add pair to batch maps?
 
+    // ----- BATCH LEVELED LIST MULTI INSERTION PROTOCOLS -----
+
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_MIN = 50;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_BASIC = 50;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_BASIC_COUNT = 51;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_BASIC_LEVEL = 52;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_BASIC_COUNT_LEVEL = 53;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_MAX = 53;
+
+    // ----- BATCH LEVELED LIST SINGLE REMOVAL PROTOCOLS -----
 
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_MIN = 100;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_BASIC = 100;
@@ -67,6 +73,8 @@ namespace Data
     // inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE = 140
     // add pair to batch maps?
 
+    // ----- BATCH LEVELED LIST MULTI REMOVAL PROTOCOLS -----
+
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_MIN = 150;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_BASIC = 150;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT = 151;
@@ -77,54 +85,70 @@ namespace Data
 
     // inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_GENERATE = 190
     
+    // ----- SPECIFIC LEVELED LIST SINGLE INSERTION PROTOCOLS -----
+
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MIN = 200;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_BASIC = 200;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MAX = 200;
+
+    // ----- SPECIFIC LEVELED LIST SINGLE REMOVAL PROTOCOLS -----
 
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN = 300;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_BASIC = 300;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX = 300;
 
+    // ----- SPECIFIC LEVELED LIST MULTI REMOVAL PROTOCOLS -----
+
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MIN = 350;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_BASIC = 350;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_TARGET_LEVELED_LIST_MAX = 350;
+
+    // ----- BATCH OUTFIT SWAP PROTOCOL -----
 
     // remove, but replace with a generated leveled list
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MIN = 450;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_BASIC = 450;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MAX = 450;
 
-    // 500 - 750 need implementation
+    // ----- BATCH CONTAINER SINGLE INSERTION PROTOCOLS -----
+
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MIN = 500;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_BASIC = 500;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_BASIC_COUNT = 501;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MAX = 501;
+
+    // ----- BATCH CONTAINER MULTI INSERTION PROTOCOLS -----
 
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MIN = 550;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_BASIC = 550;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_BASIC_COUNT = 551;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MAX = 551;
 
+    // ----- BATCH CONTAINER SINGLE REMOVAL PROTOCOLS -----
+
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MIN = 600;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_BASIC = 600;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_BASIC_COUNT = 601;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX = 601;
+
+    // ----- BATCH CONTAINER MULTI REMOVAL PROTOCOLS -----
 
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MIN = 650;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_BASIC = 650;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_BASIC_COUNT = 651;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX = 651;
 
-    // remove, but replace with a generated leveled list?
+    // ----- BATCH CONTAINER SINGLE SWAP PROTOCOLS -----
+    
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN = 700;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_BASIC = 700;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MAX = 700;
 
+    // ----- BATCH CONTAINER MULTI SWAP PROTOCOLS -----
+
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MIN = 750;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_BASIC = 750;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MAX = 750;
-
-
 
     // ----- LEVELED LIST ENTRY -----
     inline const std::size_t MAX_ENTRY_SIZE = 255; // you'd think 256, but nope
@@ -133,7 +157,9 @@ namespace Data
     inline const RE::TESLeveledList::Flag GENERATED_LEVELED_LIST_FLAGS = static_cast<RE::TESLeveledList::Flag>(static_cast<uint8_t>(RE::TESLeveledList::Flag::kCalculateFromAllLevelsLTOrEqPCLevel) | static_cast<uint8_t>(RE::TESLeveledList::Flag::kCalculateForEachItemInCount));
 
     // ----- MAX EXTRA DATA LOOKUP -----
+    #if declared(USING_UPKEEP_MANAGER)
     inline const std::size_t MAX_OUTFIT_LOOKUP_SIZE = 100;
-    inline const std::size_t MAX_CONTAINER_LOOKUP_SIZE = 30;
+    #endif
+    //inline const std::size_t MAX_CONTAINER_LOOKUP_SIZE = 30;
 }
 

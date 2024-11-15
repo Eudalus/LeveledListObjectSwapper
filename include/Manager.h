@@ -6,7 +6,9 @@
 #include "OutfitItemData.h"
 #include <vector>
 #include "boost_unordered.hpp"
-#include "ContainerItemData.h"
+#include "ContainerDirectItemData.h"
+#include "ContainerGenerateItemData.h"
+#include "ContainerGenerateData.h"
 
 namespace logger = SKSE::log;
 
@@ -29,6 +31,8 @@ public:
     bool InsertIntoKeywordMap(ItemData& data);
     bool InsertIntoOutfitMap(ItemData& data);
     bool GenerateOutfitLeveledLists();
+    bool InsertIntoContainerDirectMap(ItemData& data);
+    bool InsertIntoContainerGenerateMap(ItemData& data);
 
     // Note that insertBufferElements is not capacity, Data::MAX_ENTRY_SIZE (255) will be array max capacity
     bool ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal, std::vector<ItemData*>& resetVector);
@@ -64,7 +68,7 @@ public:
     // ----- CONTAINER MAP
     // key is target item or leveled list in container, value pair first -> second -> std::vector<ItemData> should have a leveled list generated for value pair first -> first -> RE::TESLevItem*
     // value pair second -> std::vector<ItemData> should just be inserted, swapped, or cause target removal
-    boost::unordered_flat_map<RE::FormID, std::pair<std::pair<RE::TESLevItem*, std::vector<ItemData>>, std::vector<ItemData>>> itemContainerMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<ContainerGenerateData, std::vector<ContainerDirectItemData>>> itemContainerMap;
 
     std::default_random_engine randomEngine;
 
@@ -97,4 +101,7 @@ public:
 
     std::size_t uniqueOutfitBatchModified = 0;
     std::size_t totalOutfitSwaps = 0;
+
+    std::size_t uniqueContainersBatchModified = 0;
+    std::size_t totalContainerSwaps = 0;
 };

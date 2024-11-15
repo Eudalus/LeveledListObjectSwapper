@@ -610,6 +610,34 @@ bool Manager::DirectProtocol(ItemData& data)
             //data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoOutfitMap(data);
         }
+        else if((protocol >= Data::VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MAX))
+        {
+            data.processCounter = 1;
+            return InsertIntoContainerDirectMap(data);
+        }
+        else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MAX))
+        {
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            return InsertIntoContainerDirectMap(data);
+        }
+        else if((protocol >= Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX))
+        {
+            data.processCounter = 1;
+            return InsertIntoContainerDirectMap(data);
+        }
+        else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX))
+        {
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            return InsertIntoContainerDirectMap(data);
+        }
+        else if((protocol >= Data::VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MAX))
+        {
+            return InsertIntoContainerGenerateMap(data);
+        }
+        else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MAX))
+        {
+            return InsertIntoContainerGenerateMap(data);
+        }
 
     } // maybe allow keyword formtype through to remove any items with those keywords from all leveled lists?
     else if((data.targetFormType >= Data::ITEM_FORM_TYPE) && (data.targetFormType <= Data::LEVELED_SPELL_FORM_TYPE)) // form types are not compatible, exclude keyword formtype
@@ -1213,4 +1241,26 @@ bool Manager::GenerateOutfitLeveledLists()
     }
 
     return generated;
+}
+
+bool Manager::InsertIntoContainerDirectMap(ItemData& data)
+{
+    if (Utility::CheckCompatibleContainerFormTypes(data.insertFormType, data.targetFormType))
+    {
+
+    }
+
+    ++wrongDataCounter;
+    return false;
+}
+
+bool Manager::InsertIntoContainerGenerateMap(ItemData& data)
+{
+    if (Utility::CheckCompatibleContainerFormTypes(data.insertFormType, data.targetFormType))
+    {
+
+    }
+
+    ++wrongDataCounter;
+    return false;
 }

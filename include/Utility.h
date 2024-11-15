@@ -68,4 +68,6 @@ public:
     static bool CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const std::uint8_t target);
 
     static RE::TESLevItem* CreateOutfitLeveledItemList(std::vector<OutfitItemData>& list);
+
+    static bool CheckCompatibleContainerFormTypes(const std::uint8_t insert, const std::uint8_t target);
 };

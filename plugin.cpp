@@ -152,7 +152,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 #endif
             }
 
-            logger::info("{:*^30}", "LEVELED LISTS");
+            // ----- CONTAINER FUNCTION -----
+
+            logger::info("\n{:*^30}", "LEVELED LISTS");
             logger::info("{} unique leveled lists batch modified", manager.uniqueListBatchModified);
             logger::info("{} unique target leveled lists modified", manager.uniqueListFocusModified);
             logger::info("{} total leveled list insertions", manager.totalListInserts);
@@ -160,15 +162,19 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             logger::info("{} total leveled list modifications randomly chance skipped", manager.totalListChanceSkips);
             logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListUseAllSkips);
 
-            logger::info("{:*^30}", "OUTFITS");
+            logger::info("\n{:*^30}", "OUTFITS");
             logger::info("{} unique outfits batch modified", manager.uniqueOutfitBatchModified);
             logger::info("{} total outfit item swaps", manager.totalOutfitSwaps);
+
+            logger::info("\n{:*^30}", "CONTAINERS");
+            logger::info("{} unique containers batch modified", manager.uniqueContainersBatchModified);
+            logger::info("{} total container item swaps", manager.totalContainerSwaps);
         }
         
         end = std::chrono::system_clock::now();
 
         std::chrono::duration<double> elapsed_seconds = end - start;
-        logger::info("{}s ELAPSED TIME", elapsed_seconds.count());
+        logger::info("{}s elapsed time", elapsed_seconds.count());
         
     }
 }
