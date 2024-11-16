@@ -5,7 +5,7 @@
 class ContainerGenerateData
 {
 public:
-	RE::TESLevItem* leveledList;
+	RE::TESLevItem* leveledList = nullptr;
 	std::vector<ContainerGenerateItemData> vector;
-	size_t processCounter;
+	//size_t processCounter;
 };

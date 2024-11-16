@@ -20,6 +20,7 @@ public:
     template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& keywordMap);
     template<typename T> bool ProcessFocusLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
     bool ProcessBatchOutfit();
+    bool ProcessBatchContainer();
 
     bool DirectProtocol(ItemData& data);
     bool InsertIntoBatchMap(ItemData& data); // calls InsertIntoCommonMap
@@ -33,6 +34,7 @@ public:
     bool GenerateOutfitLeveledLists();
     bool InsertIntoContainerDirectMap(ItemData& data);
     bool InsertIntoContainerGenerateMap(ItemData& data);
+    bool GenerateContainerLeveledLists();
 
     // Note that insertBufferElements is not capacity, Data::MAX_ENTRY_SIZE (255) will be array max capacity
     bool ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal, std::vector<ItemData*>& resetVector);
@@ -104,4 +106,6 @@ public:
 
     std::size_t uniqueContainersBatchModified = 0;
     std::size_t totalContainerSwaps = 0;
+    std::size_t totalContainerRemovals = 0;
+    std::size_t totalContainerInserts = 0;
 };

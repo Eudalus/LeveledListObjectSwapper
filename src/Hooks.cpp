@@ -177,7 +177,8 @@ namespace LoadHooks
 	RE::NiAVObject* CharacterLoad3DHook::Load3D(RE::Character* object, bool a_backgroundLoading)
 	{
 		auto value = _Load3D(object, a_backgroundLoading); 
-		if (object && object->GetInventoryCounts().size() < Data::MAX_OUTFIT_LOOKUP_SIZE)
+		//if (object && object->GetInventoryCounts().size() < Data::MAX_OUTFIT_LOOKUP_SIZE)
+		if (object)
 		{
 			UpkeepManager::GetSingleton()->CheckOutfit(object);
 		}

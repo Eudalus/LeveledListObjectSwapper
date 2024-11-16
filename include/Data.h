@@ -139,11 +139,11 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX = 651;
 
     // ----- BATCH CONTAINER SINGLE SWAP PROTOCOLS -----
-    
+    /*
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN = 700;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_BASIC = 700;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MAX = 700;
-
+    */
     // ----- BATCH CONTAINER MULTI SWAP PROTOCOLS -----
 
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MIN = 750;

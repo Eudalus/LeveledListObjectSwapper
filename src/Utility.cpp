@@ -427,13 +427,18 @@ bool Utility::CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const s
     return ((target == Data::KEYWORD_FORM_TYPE) && ((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_SPELL_FORM_TYPE)));
 }
 
-RE::TESLevItem* Utility::CreateOutfitLeveledItemList(std::vector<OutfitItemData>& list)
+bool Utility::CheckCompatibleContainerFormTypes(const std::uint8_t insert, const std::uint8_t target)
+{
+    return (((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)));
+}
+
+template<typename T> RE::TESLevItem* Utility::CreateLeveledList(std::vector<T>& list)
 {
     if (list.empty())
     {
         return nullptr;
     }
-    
+
     auto& leveledItemLists = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESLevItem>();
 
     RE::TESLevItem* value = nullptr;
@@ -468,7 +473,7 @@ RE::TESLevItem* Utility::CreateOutfitLeveledItemList(std::vector<OutfitItemData>
             value->numEntries = size;
             value->chanceNone = 0;
             value->llFlags = Data::GENERATED_LEVELED_LIST_FLAGS;
-            //value->llFlags;
+
             leveledItemLists.push_back(value);
         }
     }
@@ -476,8 +481,6 @@ RE::TESLevItem* Utility::CreateOutfitLeveledItemList(std::vector<OutfitItemData>
     return value;
 }
 
-bool Utility::CheckCompatibleContainerFormTypes(const std::uint8_t insert, const std::uint8_t target)
-{
-
-    return (((insert >= Data::ITEM_FORM_TYPE) && (insert <= Data::LEVELED_ITEM_FORM_TYPE)) && ((target >= Data::ITEM_FORM_TYPE) && (target <= Data::LEVELED_ITEM_FORM_TYPE)));
-}
+// necessary signatures for the linker
+template RE::TESLevItem* Utility::CreateLeveledList(std::vector<ContainerGenerateItemData>& list);
+template RE::TESLevItem* Utility::CreateLeveledList(std::vector<OutfitItemData>& list);

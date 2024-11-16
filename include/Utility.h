@@ -4,6 +4,7 @@
 #include "ItemData.h"
 #include "SmallerItemData.h"
 #include "OutfitItemData.h"
+#include "ContainerGenerateItemData.h"
 
 class Utility
 {
@@ -67,7 +68,7 @@ public:
 
     static bool CheckCompatibleKeywordFormTypes(const std::uint8_t insert, const std::uint8_t target);
 
-    static RE::TESLevItem* CreateOutfitLeveledItemList(std::vector<OutfitItemData>& list);
-
     static bool CheckCompatibleContainerFormTypes(const std::uint8_t insert, const std::uint8_t target);
+
+    template<typename T> static RE::TESLevItem* CreateLeveledList(std::vector<T>& list);
 };

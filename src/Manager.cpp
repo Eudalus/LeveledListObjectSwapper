@@ -369,33 +369,6 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
                 ++uniqueListBatchModified;
                 totalListInserts += insertBufferElements;
                 totalListRemovals += oldListSize - originalBufferElements;
-                
-                /*
-                logger::info("{} OLD LIST SIZE", oldListSize);
-                logger::info("{} NEW LIST SIZE", newListSize);
-                
-                for (int debugIterator = 0; debugIterator < currentList->numEntries; ++debugIterator)
-                {
-                    logger::info("{} NEW LIST --- FORM ID: {} --- COUNT: {} --- LEVEL: {} --- PADDING: {}", debugIterator, std::format("{:x}", currentList->entries[debugIterator].form->formID), currentList->entries[debugIterator].count, currentList->entries[debugIterator].level, currentList->entries[debugIterator].pad0C);
-                    
-                    if (currentEntries[debugIterator].itemExtra)
-                    {
-                        logger::info("{} --- HEALTH MULT         : {}", debugIterator, currentEntries[debugIterator].itemExtra->healthMult);
-                        logger::info("{} --- RANK                : {}", debugIterator, currentEntries[debugIterator].itemExtra->conditional.rank);
-
-                        if (currentEntries[debugIterator].itemExtra->conditional.global)
-                        {
-                            logger::info("{} --- VALUE           : {}", debugIterator, currentEntries[debugIterator].itemExtra->conditional.global->value);
-                        }
-
-                        if (currentEntries[debugIterator].itemExtra->owner) {
-                            logger::info("{} --- OWNER FORM ID   : {}", debugIterator, std::format("{:x}", currentEntries[debugIterator].itemExtra->owner->formID));
-                        }
-                    }
-                   
-                    logger::info("{} --- COMPLETE", debugIterator);
-                }
-                */
             }
         }
     }
@@ -629,11 +602,11 @@ bool Manager::DirectProtocol(ItemData& data)
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoContainerDirectMap(data);
-        }
+        }/*
         else if((protocol >= Data::VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MAX))
         {
             return InsertIntoContainerGenerateMap(data);
-        }
+        }*/
         else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MAX))
         {
             return InsertIntoContainerGenerateMap(data);
@@ -1226,18 +1199,18 @@ bool Manager::GenerateOutfitLeveledLists()
     
     for (auto& [targetKey, pairValue] : itemOutfitMap)
     {
-        if (!pairValue.first)
-        {
-            pairValue.first = Utility::CreateOutfitLeveledItemList(pairValue.second);
+        //if (!pairValue.first)
+        //{
+        pairValue.first = Utility::CreateLeveledList(pairValue.second);
 
-            if (pairValue.first)
-            {
-                #if defined(USING_UPKEEP_MANAGER)
-                upkeepManager->InsertLookupBatch(pairValue.first);
-                #endif
-                generated = true;
-            }
+        if (pairValue.first)
+        {
+            #if defined(USING_UPKEEP_MANAGER)
+            upkeepManager->InsertLookupBatch(pairValue.first);
+            #endif
+            generated = true;
         }
+        //}
     }
 
     return generated;
@@ -1247,7 +1220,28 @@ bool Manager::InsertIntoContainerDirectMap(ItemData& data)
 {
     if (Utility::CheckCompatibleContainerFormTypes(data.insertFormType, data.targetFormType))
     {
+        if (auto mapIterator = itemContainerMap.find(data.targetForm->formID); mapIterator != itemContainerMap.end())
+        {
+            mapIterator->second.second.emplace_back(data);
 
+            ++totalDataSize;
+
+            return true;
+        }
+        else
+        {
+            itemContainerMap.emplace(data.targetForm->formID, std::pair<ContainerGenerateData, std::vector<ContainerDirectItemData>>());
+
+            // declared in first if statement
+            mapIterator = itemContainerMap.find(data.targetForm->formID);
+
+            mapIterator->second.second.emplace_back(data);
+
+            ++totalTargetSize;
+            ++totalDataSize;
+
+            return true;
+        }
     }
 
     ++wrongDataCounter;
@@ -1258,9 +1252,118 @@ bool Manager::InsertIntoContainerGenerateMap(ItemData& data)
 {
     if (Utility::CheckCompatibleContainerFormTypes(data.insertFormType, data.targetFormType))
     {
+        if (auto mapIterator = itemContainerMap.find(data.targetForm->formID); mapIterator != itemContainerMap.end())
+        {
+            mapIterator->second.first.vector.emplace_back(data);
 
+            ++totalDataSize;
+
+            return true;
+        }
+        else
+        {
+            itemContainerMap.emplace(data.targetForm->formID, std::pair<ContainerGenerateData, std::vector<ContainerDirectItemData>>());
+
+            // declared in first if statement
+            mapIterator = itemContainerMap.find(data.targetForm->formID);
+
+            mapIterator->second.first.vector.emplace_back(data);
+
+            ++totalTargetSize;
+            ++totalDataSize;
+
+            return true;
+        }
     }
 
     ++wrongDataCounter;
+    return false;
+}
+
+bool Manager::GenerateContainerLeveledLists()
+{
+    //bool generated = false;
+    
+    for (auto& [targetKey, pairValue] : itemContainerMap)
+    {
+        //if (!pairValue.first.leveledList)
+        //{
+        pairValue.first.leveledList = Utility::CreateLeveledList(pairValue.first.vector);
+        
+        //if (pairValue.first.leveledList)
+        //{
+        //    generated = true;
+        //}
+        //}
+    }
+
+    return true;
+}
+
+bool Manager::ProcessBatchContainer()
+{
+    auto& containerList = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectCONT>();
+    size_t containerListSize = containerList.size();
+    bool containerModified;
+
+    for (size_t i = 0; i < containerListSize; ++i)
+    {
+        if (containerList[i])
+        {
+            containerModified = false;
+
+            for (size_t k = 0; k < containerList[i]->numContainerObjects; ++k)
+            {
+                auto containerObject = containerList[i]->GetContainerObjectAt(k);
+
+                if (containerObject)
+                {
+                    auto object = containerObject.value()->obj;
+
+                    if (object)
+                    {
+                        if (object->FORMTYPE == RE::FormType::LeveledItem)
+                        {
+                            logger::info("LEVELED ITEM FORM DETECTED IN CONTAINER: {}", std::format("{:x}", object->formID));
+                        }
+                        else
+                        {
+                            logger::info("NORMAL ITEM FORM DETECTED IN CONTAINER: {} --- FORM TYPE: {}", std::format("{:x}", object->formID), RE::FormTypeToString(object->FORMTYPE));
+                        }
+                        /*
+                        if (auto mapIterator = itemContainerMap.find(object->formID); mapIterator != itemContainerMap.end())
+                        {
+                            containerList[i].
+                        }
+                        */
+                    }
+                    
+                }
+            }
+            /*
+            for (size_t k = 0; k < outfitItemsSize; ++k)
+            {
+                if (outfitItems[k])
+                {
+                    if (auto mapIterator = itemOutfitMap.find(outfitItems[k]->formID); mapIterator != itemOutfitMap.end())
+                    {
+                        if (mapIterator->second.first)
+                        {
+                            outfitItems[k] = mapIterator->second.first;
+                            ++totalOutfitSwaps;
+                            outfitModified = true;
+                        }
+                    }
+                }
+            }
+            */
+
+            if (containerModified)
+            {
+                ++uniqueContainersBatchModified;
+            }
+        }
+    }
+
     return false;
 }

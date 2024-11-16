@@ -137,7 +137,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 manager.ProcessBatchLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell, manager.spellMap, manager.spellKeywordMap);
             }
 
-            // ----- OUTFIT FUNCTION -----
+            // ----- OUTFIT FUNCTIONS -----
             if (manager.GenerateOutfitLeveledLists())
             {
                 manager.ProcessBatchOutfit();
@@ -152,23 +152,31 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 #endif
             }
 
-            // ----- CONTAINER FUNCTION -----
+            // ----- CONTAINER FUNCTIONS -----
+            if (!manager.itemContainerMap.empty())
+            {
+                manager.GenerateContainerLeveledLists();
+                manager.ProcessBatchContainer();
+            }
 
-            logger::info("\n{:*^30}", "LEVELED LISTS");
+            logger::info("");
+            logger::info("{:*^30}", "LEVELED LISTS");
             logger::info("{} unique leveled lists batch modified", manager.uniqueListBatchModified);
             logger::info("{} unique target leveled lists modified", manager.uniqueListFocusModified);
             logger::info("{} total leveled list insertions", manager.totalListInserts);
             logger::info("{} total leveled list removals", manager.totalListRemovals);
             logger::info("{} total leveled list modifications randomly chance skipped", manager.totalListChanceSkips);
             logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListUseAllSkips);
-
-            logger::info("\n{:*^30}", "OUTFITS");
+            logger::info("");
+            logger::info("{:*^30}", "OUTFITS");
             logger::info("{} unique outfits batch modified", manager.uniqueOutfitBatchModified);
-            logger::info("{} total outfit item swaps", manager.totalOutfitSwaps);
-
-            logger::info("\n{:*^30}", "CONTAINERS");
+            logger::info("{} total outfit generated leveled list swaps", manager.totalOutfitSwaps);
+            logger::info("");
+            logger::info("{:*^30}", "CONTAINERS");
             logger::info("{} unique containers batch modified", manager.uniqueContainersBatchModified);
-            logger::info("{} total container item swaps", manager.totalContainerSwaps);
+            logger::info("{} total container insertions", manager.totalContainerInserts);
+            logger::info("{} total container removals", manager.totalContainerRemovals);
+            logger::info("{} total container generated leveled list swaps", manager.totalContainerSwaps);
         }
         
         end = std::chrono::system_clock::now();
