@@ -9,6 +9,7 @@
 #include "ContainerDirectItemData.h"
 #include "ContainerGenerateItemData.h"
 #include "ContainerGenerateData.h"
+#include "SmallerContainerObject.h"
 
 namespace logger = SKSE::log;
 

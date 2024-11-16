@@ -582,22 +582,22 @@ bool Manager::DirectProtocol(ItemData& data)
         {
             //data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoOutfitMap(data);
-        }
+        }/*
         else if((protocol >= Data::VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MAX))
         {
             data.processCounter = 1;
             return InsertIntoContainerDirectMap(data);
-        }
+        }*/
         else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoContainerDirectMap(data);
-        }
+        }/*
         else if((protocol >= Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX))
         {
             data.processCounter = 1;
             return InsertIntoContainerDirectMap(data);
-        }
+        }*/
         else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
@@ -1304,15 +1304,32 @@ bool Manager::ProcessBatchContainer()
 {
     auto& containerList = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectCONT>();
     size_t containerListSize = containerList.size();
-    bool containerModified;
+
+    SmallerContainerObject originalBuffer[Data::MAX_CONTAINER_MODIFY_SIZE];
+    std::vector<SmallerContainerObject> insertBuffer; // resizable buffer
+
+    size_t insertBufferCapacity = Data::MAX_CONTAINER_MODIFY_SIZE;
+
+    insertBuffer.reserve(insertBufferCapacity); // bypass early resizes
+
+    size_t originalBufferElements;
+    size_t insertBufferElements;
+
+    uint32_t numContainerObjects;
+
+    bool resizePending;
+
+    logger::info("TOTAL NUMBER OF CONTAINERS: {}", containerListSize);
 
     for (size_t i = 0; i < containerListSize; ++i)
     {
-        if (containerList[i])
+        if (containerList[i] && ((numContainerObjects = containerList[i]->numContainerObjects) < Data::MAX_CONTAINER_MODIFY_SIZE)) // single access with assignment in conditional is cruise control for cool
         {
-            containerModified = false;
+            originalBufferElements = 0;
+            insertBufferElements = 0;
+            resizePending = false;
 
-            for (size_t k = 0; k < containerList[i]->numContainerObjects; ++k)
+            for (size_t k = 0; k < numContainerObjects; ++k) // will also bypass containers with 0 items, surprisingly a lot of them
             {
                 auto containerObject = containerList[i]->GetContainerObjectAt(k);
 
@@ -1328,7 +1345,13 @@ bool Manager::ProcessBatchContainer()
                         }
                         else
                         {
-                            logger::info("NORMAL ITEM FORM DETECTED IN CONTAINER: {} --- FORM TYPE: {}", std::format("{:x}", object->formID), RE::FormTypeToString(object->FORMTYPE));
+                            logger::info("NORMAL ITEM FORM DETECTED IN CONTAINER: {} --- FORM TYPE: {} --- EXTRA DATA: {}", std::format("{:x}", object->formID), RE::FormTypeToString(object->FORMTYPE), containerObject.value()->itemExtra ? 1 : 0);
+
+                            if (containerObject.value()->itemExtra ? 1 : 0)
+                            {
+                                logger::info("CONTAINER FORM ID: {}", std::format("{:x}",containerList[i]->formID));
+                            }
+
                         }
                         /*
                         if (auto mapIterator = itemContainerMap.find(object->formID); mapIterator != itemContainerMap.end())
@@ -1340,6 +1363,10 @@ bool Manager::ProcessBatchContainer()
                     
                 }
             }
+
+
+            
+
             /*
             for (size_t k = 0; k < outfitItemsSize; ++k)
             {
@@ -1358,7 +1385,7 @@ bool Manager::ProcessBatchContainer()
             }
             */
 
-            if (containerModified)
+            if (resizePending)
             {
                 ++uniqueContainersBatchModified;
             }
