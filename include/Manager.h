@@ -21,7 +21,8 @@ public:
     template<typename T> bool ProcessBatchLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& map, boost::unordered_flat_map<RE::FormID, std::vector<ItemData>>& keywordMap);
     template<typename T> bool ProcessFocusLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
     bool ProcessBatchOutfit();
-    bool ProcessBatchContainer();
+    //bool ProcessBatchContainer();
+    bool ProcessBatchContainerLite();
 
     bool DirectProtocol(ItemData& data);
     bool InsertIntoBatchMap(ItemData& data); // calls InsertIntoCommonMap
@@ -33,17 +34,21 @@ public:
     bool InsertIntoKeywordMap(ItemData& data);
     bool InsertIntoOutfitMap(ItemData& data);
     bool GenerateOutfitLeveledLists();
-    bool InsertIntoContainerDirectMap(ItemData& data);
-    bool InsertIntoContainerGenerateMap(ItemData& data);
-    bool GenerateContainerLeveledLists();
+    //bool InsertIntoContainerDirectMap(ItemData& data);
+    //bool InsertIntoContainerGenerateMap(ItemData& data);
+    bool InsertIntoContainerGenerateMapLite(ItemData& data);
+    //bool GenerateContainerLeveledLists();
+    bool GenerateContainerLeveledListsLite();
 
     // Note that insertBufferElements is not capacity, Data::MAX_ENTRY_SIZE (255) will be array max capacity
     bool ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal, std::vector<ItemData*>& resetVector);
     bool ProcessFocusProtocolAdd(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer);
     bool ProcessFocusProtocolRemove(SmallerItemData& data, bool& keepOriginal);
+    //bool ProcessContainerBatchProtocol(ContainerDirectItemData& data, RE::ContainerObject* originalObject, std::vector<SmallerContainerObject>& insertBuffer, bool& keepOriginal, std::vector<ContainerDirectItemData*>& resetVector);
 
     void InsertLeveledListBuffers(const std::size_t insertBufferElements, SmallerLeveledObject* insertBuffer, const std::size_t originalBufferElements, SmallerLeveledObject* originalBuffer, RE::SimpleArray<RE::LEVELED_OBJECT>& entries);
     void InsertLeveledListVectorBuffer(const std::size_t insertLimit, std::vector<ItemData>& insertDataVector, const std::size_t originalBufferElements, SmallerLeveledObject* originalBuffer, RE::SimpleArray<RE::LEVELED_OBJECT>& entries);
+    void ClearAndInsertContainer(RE::TESContainer* container, std::vector<SmallerContainerObject>& insertBuffer);
 
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
@@ -71,7 +76,8 @@ public:
     // ----- CONTAINER MAP
     // key is target item or leveled list in container, value pair first -> second -> std::vector<ItemData> should have a leveled list generated for value pair first -> first -> RE::TESLevItem*
     // value pair second -> std::vector<ItemData> should just be inserted, swapped, or cause target removal
-    boost::unordered_flat_map<RE::FormID, std::pair<ContainerGenerateData, std::vector<ContainerDirectItemData>>> itemContainerMap;
+    //boost::unordered_flat_map<RE::FormID, std::pair<ContainerGenerateData, std::vector<ContainerDirectItemData>>> itemContainerMap;
+    boost::unordered_flat_map<RE::FormID, ContainerGenerateData> itemContainerMapLite;
 
     std::default_random_engine randomEngine;
 
@@ -83,15 +89,20 @@ public:
 
     // number of leveled lists edited in batch
     std::size_t uniqueListBatchModified = 0;
+    std::size_t uniqueContainersBatchModified = 0;
+    std::size_t uniqueOutfitBatchModified = 0;
 
     // number of times a new item was inserted into a leveled list
     std::size_t totalListInserts = 0;
+    //std::size_t totalContainerInserts = 0;
 
     // number of times an original item was removed from a leveled list
     std::size_t totalListRemovals = 0;
+    //std::size_t totalContainerRemovals = 0;
 
     // number of times that were skipped due to ItemData chance
     std::size_t totalListChanceSkips = 0;
+    //size_t totalContainerChanceSkips = 0;
 
     // number of times that leveled lists modifications were skipped due to UseAll flag
     std::size_t totalListUseAllSkips = 0;
@@ -102,11 +113,8 @@ public:
     // number of ItemData in all map vectors
     std::size_t totalDataSize = 0;
 
-    std::size_t uniqueOutfitBatchModified = 0;
-    std::size_t totalOutfitSwaps = 0;
-
-    std::size_t uniqueContainersBatchModified = 0;
+    // number of generated leveled list swaps
     std::size_t totalContainerSwaps = 0;
-    std::size_t totalContainerRemovals = 0;
-    std::size_t totalContainerInserts = 0;
+    std::size_t totalOutfitSwaps = 0;
+    
 };

@@ -153,10 +153,10 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             }
 
             // ----- CONTAINER FUNCTIONS -----
-            if (!manager.itemContainerMap.empty())
+            if (!manager.itemContainerMapLite.empty())
             {
-                manager.GenerateContainerLeveledLists();
-                manager.ProcessBatchContainer();
+                manager.GenerateContainerLeveledListsLite();
+                manager.ProcessBatchContainerLite();
             }
 
             logger::info("");
@@ -174,9 +174,10 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             logger::info("");
             logger::info("{:*^30}", "CONTAINERS");
             logger::info("{} unique containers batch modified", manager.uniqueContainersBatchModified);
-            logger::info("{} total container insertions", manager.totalContainerInserts);
-            logger::info("{} total container removals", manager.totalContainerRemovals);
+            //logger::info("{} total container insertions", manager.totalContainerInserts);
+            //logger::info("{} total container removals", manager.totalContainerRemovals);
             logger::info("{} total container generated leveled list swaps", manager.totalContainerSwaps);
+            //logger::info("{} total container modifications randomly chance skipped", manager.totalListChanceSkips);
         }
         
         end = std::chrono::system_clock::now();

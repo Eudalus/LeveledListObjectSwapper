@@ -104,14 +104,14 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MIN = 450;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_BASIC = 450;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_OUTFIT_SWAP_MAX = 450;
-
+    
     // ----- BATCH CONTAINER SINGLE INSERTION PROTOCOLS -----
     /*
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MIN = 500;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_BASIC = 500;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_BASIC_COUNT = 501;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_MAX = 501;
-    */
+    
     // ----- BATCH CONTAINER MULTI INSERTION PROTOCOLS -----
 
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MIN = 550;
@@ -120,19 +120,21 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MAX = 551;
 
     // ----- BATCH CONTAINER SINGLE REMOVAL PROTOCOLS -----
-    /*
+    
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MIN = 600;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_BASIC = 600;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_BASIC_COUNT = 601;
-    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX = 601;
-    */
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_NO_INSERT = 602;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX = 602;
+    
     // ----- BATCH CONTAINER MULTI REMOVAL PROTOCOLS -----
 
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MIN = 650;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_BASIC = 650;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_BASIC_COUNT = 651;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX = 651;
-
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_NO_INSERT = 652;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX = 652;
+    */
     // ----- BATCH CONTAINER SINGLE SWAP PROTOCOLS -----
     /*
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN = 700;

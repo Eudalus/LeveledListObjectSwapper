@@ -587,29 +587,29 @@ bool Manager::DirectProtocol(ItemData& data)
         {
             data.processCounter = 1;
             return InsertIntoContainerDirectMap(data);
-        }*/
+        }
         else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_INSERT_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoContainerDirectMap(data);
-        }/*
+        }
         else if((protocol >= Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_MAX))
         {
             data.processCounter = 1;
             return InsertIntoContainerDirectMap(data);
-        }*/
+        }
         else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_MAX))
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoContainerDirectMap(data);
-        }/*
+        }*//*
         else if((protocol >= Data::VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_CONTAINER_SWAP_MAX))
         {
             return InsertIntoContainerGenerateMap(data);
         }*/
         else if((protocol >= Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_MAX))
         {
-            return InsertIntoContainerGenerateMap(data);
+            return InsertIntoContainerGenerateMapLite(data);
         }
 
     } // maybe allow keyword formtype through to remove any items with those keywords from all leveled lists?
@@ -1216,6 +1216,7 @@ bool Manager::GenerateOutfitLeveledLists()
     return generated;
 }
 
+/*
 bool Manager::InsertIntoContainerDirectMap(ItemData& data)
 {
     if (Utility::CheckCompatibleContainerFormTypes(data.insertFormType, data.targetFormType))
@@ -1247,7 +1248,9 @@ bool Manager::InsertIntoContainerDirectMap(ItemData& data)
     ++wrongDataCounter;
     return false;
 }
+*/
 
+/*
 bool Manager::InsertIntoContainerGenerateMap(ItemData& data)
 {
     if (Utility::CheckCompatibleContainerFormTypes(data.insertFormType, data.targetFormType))
@@ -1279,7 +1282,9 @@ bool Manager::InsertIntoContainerGenerateMap(ItemData& data)
     ++wrongDataCounter;
     return false;
 }
+*/
 
+/*
 bool Manager::GenerateContainerLeveledLists()
 {
     //bool generated = false;
@@ -1299,7 +1304,9 @@ bool Manager::GenerateContainerLeveledLists()
 
     return true;
 }
+*/
 
+/*
 bool Manager::ProcessBatchContainer()
 {
     auto& containerList = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectCONT>();
@@ -1307,85 +1314,156 @@ bool Manager::ProcessBatchContainer()
 
     SmallerContainerObject originalBuffer[Data::MAX_CONTAINER_MODIFY_SIZE];
     std::vector<SmallerContainerObject> insertBuffer; // resizable buffer
-
-    size_t insertBufferCapacity = Data::MAX_CONTAINER_MODIFY_SIZE;
-
-    insertBuffer.reserve(insertBufferCapacity); // bypass early resizes
-
+    std::vector<ContainerDirectItemData*> resetVector;
+    //size_t insertBufferCapacity = Data::MAX_CONTAINER_MODIFY_SIZE;
+    //size_t insertBufferElements;
     size_t originalBufferElements;
-    size_t insertBufferElements;
+    size_t directItemVectorSize;
+    size_t resetVectorSize;
+
+    std::uniform_real_distribution<float> randomDistributor(0.0f, 99.99f);
 
     uint32_t numContainerObjects;
 
     bool resizePending;
+    bool keepOriginal;
 
-    logger::info("TOTAL NUMBER OF CONTAINERS: {}", containerListSize);
+    insertBuffer.reserve(Data::MAX_CONTAINER_MODIFY_SIZE); // bypass early resizes
+    resetVector.reserve(Data::MAX_CONTAINER_MODIFY_SIZE);
 
     for (size_t i = 0; i < containerListSize; ++i)
     {
         if (containerList[i] && ((numContainerObjects = containerList[i]->numContainerObjects) < Data::MAX_CONTAINER_MODIFY_SIZE)) // single access with assignment in conditional is cruise control for cool
         {
             originalBufferElements = 0;
-            insertBufferElements = 0;
+            //insertBufferElements = 0;
             resizePending = false;
+            keepOriginal = true;
 
             for (size_t k = 0; k < numContainerObjects; ++k) // will also bypass containers with 0 items, surprisingly a lot of them
             {
-                auto containerObject = containerList[i]->GetContainerObjectAt(k);
+                auto containerObject = (containerList[i]->containerObjects ? containerList[i]->containerObjects[k] : nullptr);
 
-                if (containerObject)
+                if (containerObject && containerObject->obj)
                 {
-                    auto object = containerObject.value()->obj;
-
-                    if (object)
+                    if (auto mapIterator = itemContainerMap.find(containerObject->obj->formID); mapIterator != itemContainerMap.end())
                     {
-                        if (object->FORMTYPE == RE::FormType::LeveledItem)
-                        {
-                            logger::info("LEVELED ITEM FORM DETECTED IN CONTAINER: {}", std::format("{:x}", object->formID));
-                        }
-                        else
-                        {
-                            logger::info("NORMAL ITEM FORM DETECTED IN CONTAINER: {} --- FORM TYPE: {} --- EXTRA DATA: {}", std::format("{:x}", object->formID), RE::FormTypeToString(object->FORMTYPE), containerObject.value()->itemExtra ? 1 : 0);
+                        auto& directItemVector = mapIterator->second.second;
+                        directItemVectorSize = directItemVector.size();
 
-                            if (containerObject.value()->itemExtra ? 1 : 0)
+                        for (size_t x = 0; x < directItemVectorSize; ++x)
+                        {
+                            if (directItemVector[x].processCounter > 0)
                             {
-                                logger::info("CONTAINER FORM ID: {}", std::format("{:x}",containerList[i]->formID));
+                                if (randomDistributor(randomEngine) < directItemVector[x].chance)
+                                {
+                                    
+                                    if (ProcessContainerBatchProtocol(directItemVector[x], containerObject, insertBuffer, keepOriginal, resetVector))
+                                    {
+                                        resizePending = true;
+                                    }
+                                }
+                                else
+                                {
+                                    ++totalContainerChanceSkips;
+                                }
                             }
-
                         }
-                        /*
-                        if (auto mapIterator = itemContainerMap.find(object->formID); mapIterator != itemContainerMap.end())
+
+                        if (mapIterator->second.first.leveledList)
                         {
-                            containerList[i].
+                            // basically protocol handling for this case
+                            if (keepOriginal)
+                            {
+                                // direct swap
+                                containerObject->obj = mapIterator->second.first.leveledList;
+                                ++totalContainerSwaps;
+                            }
+                            else
+                            {
+                                insertBuffer.emplace_back(containerObject->count, mapIterator->second.first.leveledList);
+                                resizePending = true;
+                                ++totalContainerSwaps;
+                            }
                         }
-                        */
                     }
-                    
-                }
-            }
 
-
-            
-
-            /*
-            for (size_t k = 0; k < outfitItemsSize; ++k)
-            {
-                if (outfitItems[k])
-                {
-                    if (auto mapIterator = itemOutfitMap.find(outfitItems[k]->formID); mapIterator != itemOutfitMap.end())
+                    if (keepOriginal)
                     {
-                        if (mapIterator->second.first)
-                        {
-                            outfitItems[k] = mapIterator->second.first;
-                            ++totalOutfitSwaps;
-                            outfitModified = true;
-                        }
+                        insertBuffer.emplace_back(containerObject->count, containerObject->obj);
                     }
                 }
             }
-            */
 
             if (resizePending)
+            {
+                ClearAndInsertContainer(containerList[i], insertBuffer);
+
+                ++uniqueContainersBatchModified;
+
+                if (insertBuffer.size() > 0)
+                {
+                    insertBuffer.clear();
+                    insertBuffer.reserve(Data::MAX_CONTAINER_MODIFY_SIZE);
+                }
+
+                resetVectorSize = resetVector.size();
+
+                if (resetVectorSize > 0)
+                {
+                    // reset process counters for next loop
+                    for (size_t m = 0; m < resetVectorSize; ++m)
+                    {
+                        resetVector[m]->processCounter = 1;
+                    }
+
+                    resetVector.clear();
+                    resetVector.reserve(Data::MAX_CONTAINER_MODIFY_SIZE);
+                }
+            }
+        }
+    }
+
+    return false;
+}
+*/
+
+bool Manager::ProcessBatchContainerLite()
+{
+    auto& containerList = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectCONT>();
+    size_t containerListSize = containerList.size();
+
+    uint32_t numContainerObjects;
+
+    bool containerModified;
+
+    for (size_t i = 0; i < containerListSize; ++i)
+    {
+        if (containerList[i] && ((numContainerObjects = containerList[i]->numContainerObjects) < Data::MAX_CONTAINER_MODIFY_SIZE)) // single access with assignment in conditional is cruise control for cool
+        {
+            containerModified = false;
+
+            for (size_t k = 0; k < numContainerObjects; ++k) // will also bypass containers with 0 items, surprisingly a lot of them
+            {
+                auto containerObject = (containerList[i]->containerObjects ? containerList[i]->containerObjects[k] : nullptr);
+
+                if (containerObject && containerObject->obj)
+                {
+                    if (auto mapIterator = itemContainerMapLite.find(containerObject->obj->formID); mapIterator != itemContainerMapLite.end())
+                    {
+                        if (mapIterator->second.leveledList)
+                        {
+                            // basically protocol handling for this case
+                            // direct swap
+                            containerObject->obj = mapIterator->second.leveledList;
+                            ++totalContainerSwaps;
+                            containerModified = true;
+                        }
+                    }
+                }
+            }
+
+            if (containerModified)
             {
                 ++uniqueContainersBatchModified;
             }
@@ -1393,4 +1471,177 @@ bool Manager::ProcessBatchContainer()
     }
 
     return false;
+}
+
+/*
+bool Manager::ProcessContainerBatchProtocol(ContainerDirectItemData& data, RE::ContainerObject* originalObject, std::vector<SmallerContainerObject>& insertBuffer, bool& keepOriginal, std::vector<ContainerDirectItemData*>& resetVector)
+{
+    switch (data.protocol)
+	{
+		case Data::VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_BASIC:
+
+            insertBuffer.emplace_back((rand() % (data.maxCount - data.minCount + 1)) + data.minCount, (RE::TESBoundObject*)data.insertForm);
+
+            data.processCounter = 0;
+            ++totalContainerInserts;
+
+            return true;
+        case Data::VALID_SINGLE_PROTOCOL_CONTAINER_INSERT_BASIC_COUNT:
+
+            insertBuffer.emplace_back(originalObject->count, (RE::TESBoundObject*)data.insertForm);
+
+            data.processCounter = 0;
+            ++totalContainerInserts;
+
+            return true;
+        case Data::VALID_MULTI_PROTOCOL_CONTAINER_INSERT_BASIC:
+
+            insertBuffer.emplace_back((rand() % (data.maxCount - data.minCount + 1)) + data.minCount, (RE::TESBoundObject*)data.insertForm);
+
+            ++totalContainerInserts;
+
+            return true;
+        case Data::VALID_MULTI_PROTOCOL_CONTAINER_INSERT_BASIC_COUNT:
+
+            insertBuffer.emplace_back(originalObject->count, (RE::TESBoundObject*)data.insertForm);
+
+            ++totalContainerInserts;
+
+            return true;
+        case Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_BASIC:
+
+            insertBuffer.emplace_back((rand() % (data.maxCount - data.minCount + 1)) + data.minCount, (RE::TESBoundObject*)data.insertForm);
+
+            data.processCounter = 0;
+            ++totalContainerRemovals;
+            keepOriginal = false;
+
+            return true;
+        case Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_BASIC_COUNT:
+
+            insertBuffer.emplace_back(originalObject->count, (RE::TESBoundObject*)data.insertForm);
+
+            data.processCounter = 0;
+            ++totalContainerRemovals;
+            keepOriginal = false;
+
+            return true;
+        case Data::VALID_SINGLE_PROTOCOL_CONTAINER_REMOVE_NO_INSERT:
+
+            data.processCounter = 0;
+            ++totalContainerRemovals;
+            keepOriginal = false;
+
+            return true;
+        case Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_BASIC:
+
+            insertBuffer.emplace_back((rand() % (data.maxCount - data.minCount + 1)) + data.minCount, (RE::TESBoundObject*)data.insertForm);
+
+            ++totalContainerRemovals;
+            keepOriginal = false;
+
+            return true;
+        case Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_BASIC_COUNT:
+
+            insertBuffer.emplace_back(originalObject->count, (RE::TESBoundObject*)data.insertForm);
+
+            ++totalContainerRemovals;
+            keepOriginal = false;
+
+            return true;
+        case Data::VALID_MULTI_PROTOCOL_CONTAINER_REMOVE_NO_INSERT:
+
+            ++totalContainerRemovals;
+            keepOriginal = false;
+
+            return true;
+        
+        // handled in ProcessBatchContainer function
+        //case Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_BASIC:
+        //    return true;
+        
+	}
+
+    ++wrongDataCounter;
+    return false;
+}
+*/
+
+void Manager::ClearAndInsertContainer(RE::TESContainer* container, std::vector<SmallerContainerObject>& insertBuffer)
+{
+    RE::free(container->containerObjects);
+
+    const auto insertBufferSize = insertBuffer.size();
+
+    if (insertBufferSize > 0)
+    {
+        container->containerObjects = RE::calloc<RE::ContainerObject*>(insertBufferSize);
+
+        for (size_t i = 0; i < insertBufferSize; ++i)
+        {
+            container->containerObjects[i] = new RE::ContainerObject(insertBuffer[i].obj, insertBuffer[i].count);
+
+            // maybe use ContainerObject instead of SmallerContainerObject to preserve owner?
+            /*
+            if(insertBuffer[i].ContainerItemExtra && insertBuffer[i].ContainerItemExtra->owner)
+            {
+                container->containerObjects[i] = new RE::ContainerObject(insertBuffer[i].obj, insertBuffer[i].count, insertBuffer[i].ContainerItemExtra->owner);
+            }
+            else
+            {
+                container->containerObjects[i] = new RE::ContainerObject(insertBuffer[i].obj, insertBuffer[i].count);
+            }
+            */
+        }
+    }
+    /*
+    else
+    {
+        container->containerObjects = nullptr; // insurance
+    }
+    */
+
+    container->numContainerObjects = static_cast<uint32_t>(insertBufferSize);
+}
+
+bool Manager::InsertIntoContainerGenerateMapLite(ItemData& data)
+{
+    if (Utility::CheckCompatibleContainerFormTypes(data.insertFormType, data.targetFormType))
+    {
+        if (auto mapIterator = itemContainerMapLite.find(data.targetForm->formID); mapIterator != itemContainerMapLite.end())
+        {
+            mapIterator->second.vector.emplace_back(data);
+
+            ++totalDataSize;
+
+            return true;
+        }
+        else
+        {
+            itemContainerMapLite.emplace(data.targetForm->formID, ContainerGenerateData());
+
+            // declared in first if statement
+            mapIterator = itemContainerMapLite.find(data.targetForm->formID);
+
+            mapIterator->second.vector.emplace_back(data);
+
+            ++totalTargetSize;
+            ++totalDataSize;
+
+            return true;
+        }
+    }
+
+    ++wrongDataCounter;
+    return false;
+}
+
+bool Manager::GenerateContainerLeveledListsLite()
+{
+    for (auto& [targetKey, pairValue] : itemContainerMapLite)
+    {
+        pairValue.leveledList = Utility::CreateLeveledList(pairValue.vector);
+    }
+
+    return true;
 }
