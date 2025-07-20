@@ -31,14 +31,15 @@ namespace Data
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_BASIC_COUNT_LEVEL = 3;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_INSERT_MAX = 3;
 
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_EXCLUSIVE = 20
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_EXCLUSIVE_COUNT = 21
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_EXCLUSIVE_LEVEL = 22
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_EXCLUSIVE_COUNT_LEVEL = 23
-
-    // generate and insert leveled list?
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE = 40
-    // add pair to batch maps?
+    /*
+    // generate new leveled list with insert items and insert alongside target once
+    inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE_MIN = 20;
+    inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE = 20;
+    inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE_COUNT = 21;
+    inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE_LEVEL = 22;
+    inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE_COUNT_LEVEL = 23;
+    inline const std::int16_t VALID_SINGLE_PROTOCOL_INSERT_GENERATE_MAX = 23;
+    */
 
     // ----- BATCH LEVELED LIST MULTI INSERTION PROTOCOLS -----
 
@@ -48,6 +49,16 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_BASIC_LEVEL = 52;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_BASIC_COUNT_LEVEL = 53;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_INSERT_MAX = 53;
+
+    /*
+    // generate new leveled list with insert items and insert alongside target each time target is found in leveled lists
+    inline const std::int16_t VALID_MULTI_PROTOCOL_INSERT_GENERATE_MIN = 70;
+    inline const std::int16_t VALID_MULTI_PROTOCOL_INSERT_GENERATE = 70;
+    inline const std::int16_t VALID_MULTI_PROTOCOL_INSERT_GENERATE_COUNT = 71;
+    inline const std::int16_t VALID_MULTI_PROTOCOL_INSERT_GENERATE_LEVEL = 72;
+    inline const std::int16_t VALID_MULTI_PROTOCOL_INSERT_GENERATE_COUNT_LEVEL = 73;
+    inline const std::int16_t VALID_MULTI_PROTOCOL_INSERT_GENERATE_MAX = 73;
+    */
 
     // ----- BATCH LEVELED LIST SINGLE REMOVAL PROTOCOLS -----
 
@@ -59,14 +70,15 @@ namespace Data
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_NO_INSERT_REMOVE = 104;
     inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_MAX = 104;
 
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_REMOVE_EXCLUSIVE = 120
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_REMOVE_EXCLUSIVE_COUNT = 121
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_REMOVE_EXCLUSIVE_LEVEL = 122
-    // inline const std::int16_t VALID_SINGLE_PROTOCOL_REMOVE_EXCLUSIVE_COUNT_LEVEL = 123
-
-    // remove, but replace with a generated leveled list?
-    // inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE = 140
-    // add pair to batch maps?
+    /*
+    // generate new leveled list with insert items, remove target once, and insert the generated leveled list once
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE_MIN = 120;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE = 120;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE_COUNT = 121;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE_LEVEL = 122;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE_COUNT_LEVEL = 123;
+    inline const std::uint16_t VALID_SINGLE_PROTOCOL_REMOVE_GENERATE_MAX = 123;
+    */
 
     // ----- BATCH LEVELED LIST MULTI REMOVAL PROTOCOLS -----
 
@@ -78,7 +90,11 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_NO_INSERT_REMOVE = 154;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_MAX = 154;
 
-    // inline const std::uint16_t VALID_MULTI_PROTOCOL_REMOVE_GENERATE = 190
+    // generate new leveled list with insert items, remove target each time it is found in leveled lists, and insert the generated leveled list each time target is found
+    // leveled list will be generated, have items inserted, then entered into batch map with a protocol of 153
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN = 170;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_BASIC = 170;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_MAX = 170;
     
     // ----- SPECIFIC LEVELED LIST SINGLE INSERTION PROTOCOLS -----
 

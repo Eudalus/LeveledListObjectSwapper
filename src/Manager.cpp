@@ -540,6 +540,11 @@ bool Manager::DirectProtocol(ItemData& data)
             data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoKeywordMap(data);
         }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MAX))
+        {
+            data.processCounter = 1;
+            return insertGeneratedKeywordMap(data);
+        }
     }
     else if (Utility::CheckCompatibleLeveledListFormTypes(data.insertFormType, data.targetFormType)) // check if form types are compatible
     {
@@ -562,6 +567,11 @@ bool Manager::DirectProtocol(ItemData& data)
         {
             data.processCounter = Data::MAX_ENTRY_SIZE;
             return InsertIntoBatchMap(data);
+        }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MAX))
+        {
+            data.processCounter = 1;
+            return InsertGeneratedBatchMap(data);
         }
         else if ((protocol >= Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MIN) && (protocol <= Data::VALID_SINGLE_PROTOCOL_INSERT_TARGET_LEVELED_LIST_MAX))
         {
@@ -1645,3 +1655,133 @@ bool Manager::GenerateContainerLeveledListsLite()
 
     return true;
 }
+
+bool Manager::InsertGeneratedBatchMap(ItemData& data)
+{
+    switch (data.targetFormType)
+	{
+    case Data::ITEM_FORM_TYPE:
+    case Data::ARMOR_FORM_TYPE:
+    case Data::LEVELED_ITEM_FORM_TYPE:
+        
+        return InsertIntoGeneratedBatchMap<RE::TESLevItem*>(RE::FormType::LeveledItem, data, itemLeveledListGenerateBatchMap);
+    case Data::NPC_FORM_TYPE:
+    case Data::LEVELED_NPC_FORM_TYPE:
+        
+        return InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, data, npcLeveledListGenerateBatchMap);
+    case Data::SPELL_FORM_TYPE:
+    case Data::LEVELED_SPELL_FORM_TYPE:
+        
+        return InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(RE::FormType::LeveledSpell, data, spellLeveledListGenerateBatchMap);
+	}
+
+    ++removedDataCounter;
+    return false;
+}
+
+template<typename T> bool Manager::InsertIntoGeneratedBatchMap(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map)
+{
+    if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
+    {
+        mapIterator->second.second.emplace_back(data);
+
+        //++totalDataSize;
+
+        return true;
+    }
+    else
+    {
+        map.emplace(data.targetForm->formID, std::make_pair(T{}, std::vector<ContainerGenerateItemData>()));
+        map.at(data.targetForm->formID).second.emplace_back(data);
+
+        //++totalTargetSize;
+        //++totalDataSize;
+
+        return true;
+    }
+
+    ++removedDataCounter;
+    return false;
+}
+
+// necessary signatures for the linker
+template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevItem*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>>& map);
+
+
+template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map)
+{
+    // TODO: implement templated CreateLeveledList function, pass ItemData to DirectProtocol, use std::remove_pointer_t to get underlying type of typename T
+    for (auto& [targetKey, pairValue] : map)
+    {
+        //if (!pairValue.first)
+        //{
+        //pairValue.first = Utility::CreateLeveledList(pairValue.second);
+
+        if (pairValue.first)
+        {
+            // construct ItemData for generated leveled list and reinsert 
+            //DirectProtocol();
+        }
+        //}
+    }
+
+    return true;
+}
+
+// necessary signatures for the linker
+template bool Manager::GenerateBatchMapLeveledList<RE::TESLevItem*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::GenerateBatchMapLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::GenerateBatchMapLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>>& map);
+
+
+bool Manager::insertGeneratedKeywordMap(ItemData& data)
+{
+    return false;
+}
+
+template<typename T> bool Manager::SafeCircularInsertionWrapper(const T* insert, const T* list)
+{
+    if (!insert || !list || (insert == list))
+    {
+        return false;
+    }
+
+    bool value = true;
+
+    for (std::uint8_t i = static_cast<std::uint8_t>(0); (i < list->numEntries) && (i < list->entries.size()); ++i)
+    {
+        T* entry = list->entries[i].form ? list->entries[i].form->As<T>() : nullptr;
+        /*
+        if (entry == insert)
+        {
+            value = false;
+        }*/
+        if (entry)
+        {
+            value = value && !SafeCircularInsertion(insert, entry, list);
+        }
+    }
+
+    return value;
+}
+
+template<typename T> bool Manager::SafeCircularInsertion(const T* insert, const T* list, const T* entryList)
+{
+    if (list)
+    {
+
+    }
+    
+    return true;
+}
+
+// necessary signatures for the linker
+template bool Manager::SafeCircularInsertionWrapper<RE::TESLevItem>(const RE::TESLevItem* insert, const RE::TESLevItem* list);
+template bool Manager::SafeCircularInsertionWrapper<RE::TESLevCharacter>(const RE::TESLevCharacter* insert, const RE::TESLevCharacter* list);
+template bool Manager::SafeCircularInsertionWrapper<RE::TESLevSpell>(const RE::TESLevSpell* insert, const RE::TESLevSpell* list);
+
+template bool Manager::SafeCircularInsertion<RE::TESLevItem>(const RE::TESLevItem* insert, const RE::TESLevItem* list, const RE::TESLevItem* entryList);
+template bool Manager::SafeCircularInsertion<RE::TESLevCharacter>(const RE::TESLevCharacter* insert, const RE::TESLevCharacter* list, const RE::TESLevCharacter* entryList);
+template bool Manager::SafeCircularInsertion<RE::TESLevSpell>(const RE::TESLevSpell* insert, const RE::TESLevSpell* list, const RE::TESLevSpell* entryList);
