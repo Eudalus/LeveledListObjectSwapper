@@ -1712,17 +1712,39 @@ template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(const RE::F
 
 template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map)
 {
-    // TODO: implement templated CreateLeveledList function, pass ItemData to DirectProtocol, use std::remove_pointer_t to get underlying type of typename T
     for (auto& [targetKey, pairValue] : map)
     {
         //if (!pairValue.first)
         //{
-        //pairValue.first = Utility::CreateLeveledList(pairValue.second);
+        pairValue.first = Utility::GenerateLeveledList<T>(formType, pairValue.second);
 
         if (pairValue.first)
         {
-            // construct ItemData for generated leveled list and reinsert 
-            //DirectProtocol();
+            // construct ItemData for generated leveled list and reinsert
+            ItemData leveledListItemData;
+
+            leveledListItemData.targetForm = RE::TESForm::LookupByID(targetKey);
+
+            if (leveledListItemData.targetForm)
+            {
+                leveledListItemData.targetFormType = Utility::CheckFormType(leveledListItemData.targetForm);
+                leveledListItemData.insertForm = pairValue.first;
+                leveledListItemData.insertFormType = Utility::CheckFormType(leveledListItemData.insertForm);
+
+                if (Utility::CheckCompatibleLeveledListFormTypes(leveledListItemData.insertFormType, leveledListItemData.targetFormType))
+                {
+                    // useAll flag TRUE, will insert this insert leveled list into leveled lists with the useAll flag
+                    // (does not set this insert leveled list's useAll flag)
+                    leveledListItemData.useAll = 1;
+
+                    leveledListItemData.processCounter = Data::MAX_ENTRY_SIZE;
+                    leveledListItemData.chance = 100.0f;
+
+                    // do not need to modify level or count since it will use existing target level and count
+                    leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL;
+                    DirectProtocol(leveledListItemData);
+                }
+            }
         }
         //}
     }
@@ -1734,7 +1756,6 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
 template bool Manager::GenerateBatchMapLeveledList<RE::TESLevItem*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
 template bool Manager::GenerateBatchMapLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>>& map);
 template bool Manager::GenerateBatchMapLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>>& map);
-
 
 bool Manager::insertGeneratedKeywordMap(ItemData& data)
 {

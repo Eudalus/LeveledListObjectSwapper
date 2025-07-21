@@ -71,4 +71,6 @@ public:
     static bool CheckCompatibleContainerFormTypes(const std::uint8_t insert, const std::uint8_t target);
 
     template<typename T> static RE::TESLevItem* CreateLeveledList(std::vector<T>& list);
+
+    template<typename T> static T GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list);
 };

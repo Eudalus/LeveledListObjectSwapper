@@ -484,3 +484,57 @@ template<typename T> RE::TESLevItem* Utility::CreateLeveledList(std::vector<T>& 
 // necessary signatures for the linker
 template RE::TESLevItem* Utility::CreateLeveledList(std::vector<ContainerGenerateItemData>& list);
 template RE::TESLevItem* Utility::CreateLeveledList(std::vector<OutfitItemData>& list);
+
+template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list)
+{
+    if (list.empty())
+    {
+        return T{};
+    }
+
+    auto& leveledItemLists = RE::TESDataHandler::GetSingleton()->GetFormArray<std::remove_pointer_t<T>>();
+
+    T value{}; // nullptr or default initialized
+
+    const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<std::remove_pointer_t<T>>();
+
+    uint8_t size;
+
+    if (factory)
+    {
+        value = factory->Create();
+
+        if (value)
+        {
+            size = std::min(list.size(), Data::MAX_ENTRY_SIZE);
+
+            value->entries.resize(size);
+
+            RE::SimpleArray<RE::LEVELED_OBJECT>& entries = value->entries;
+
+            for (uint8_t i = 0; i < size; ++i)
+            {
+                entries[i].form = list[i].insertForm;
+                entries[i].count = (rand() % (list[i].maxCount - list[i].minCount + 1)) + list[i].minCount;
+                entries[i].level = (rand() % (list[i].maxLevel - list[i].minLevel + 1)) + list[i].minLevel;
+                entries[i].itemExtra = nullptr;
+            }
+
+            // sort, don't need to sanitize since data insert loop handles it
+            std::sort(entries.begin(), entries.end(), Utility::CompareLeveledListEntryLevel);
+
+            value->numEntries = size;
+            value->chanceNone = 0;
+            value->llFlags = Data::GENERATED_LEVELED_LIST_FLAGS;
+
+            leveledItemLists.push_back(value);
+        }
+    }
+
+    return value;
+}
+
+// necessary signatures for the linker
+template RE::TESLevItem* Utility::GenerateLeveledList<RE::TESLevItem*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list);
+template RE::TESLevCharacter* Utility::GenerateLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list);
+template RE::TESLevSpell* Utility::GenerateLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list);
