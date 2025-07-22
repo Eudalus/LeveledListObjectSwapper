@@ -160,13 +160,6 @@ bool Manager::LoadData()
         }
     }
 
-    logger::info("{:*^30}", "RESULTS");
-
-    logger::info("{} valid data found", totalDataSize);
-    logger::info("{} invalid data removed", removedDataCounter);
-
-    logger::info("{:*^30}", "INFO");
-
     return totalDataSize >= 1;
 }
 
@@ -308,7 +301,6 @@ template<typename T> bool Manager::ProcessBatchLeveledList(const RE::FormType& f
                                     }
                                 }
                             }
-                            
                         }
                     }
                 }
@@ -1215,6 +1207,7 @@ bool Manager::GenerateOutfitLeveledLists()
 
         if (pairValue.first)
         {
+            ++totalLeveledListGenerated;
             #if defined(USING_UPKEEP_MANAGER)
             upkeepManager->InsertLookupBatch(pairValue.first);
             #endif
@@ -1651,6 +1644,7 @@ bool Manager::GenerateContainerLeveledListsLite()
     for (auto& [targetKey, pairValue] : itemContainerMapLite)
     {
         pairValue.leveledList = Utility::CreateLeveledList(pairValue.vector);
+        ++totalLeveledListGenerated;
     }
 
     return true;
@@ -1709,7 +1703,6 @@ template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevItem*>(const RE::Fo
 template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>>& map);
 template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>>& map);
 
-
 template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map)
 {
     for (auto& [targetKey, pairValue] : map)
@@ -1720,6 +1713,8 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
 
         if (pairValue.first)
         {
+            ++totalLeveledListGenerated;
+
             // construct ItemData for generated leveled list and reinsert
             ItemData leveledListItemData;
 
@@ -1731,8 +1726,8 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
                 leveledListItemData.insertForm = pairValue.first;
                 leveledListItemData.insertFormType = Utility::CheckFormType(leveledListItemData.insertForm);
 
-                if (Utility::CheckCompatibleLeveledListFormTypes(leveledListItemData.insertFormType, leveledListItemData.targetFormType))
-                {
+                //if (Utility::CheckCompatibleLeveledListFormTypes(leveledListItemData.insertFormType, leveledListItemData.targetFormType)) // performed in DirectProtocol
+                //{
                     // useAll flag TRUE, will insert this insert leveled list into leveled lists with the useAll flag
                     // (does not set this insert leveled list's useAll flag)
                     leveledListItemData.useAll = 1;
@@ -1742,8 +1737,10 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
 
                     // do not need to modify level or count since it will use existing target level and count
                     leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL;
+
+                    // reinsert generated leveled list
                     DirectProtocol(leveledListItemData);
-                }
+                //}
             }
         }
         //}
@@ -1759,6 +1756,24 @@ template bool Manager::GenerateBatchMapLeveledList<RE::TESLevSpell*>(const RE::F
 
 bool Manager::insertGeneratedKeywordMap(ItemData& data)
 {
+    switch (data.insertFormType) // has to use insertFormType since targetFormType should be keyword.
+	{
+    case Data::ITEM_FORM_TYPE:
+    case Data::ARMOR_FORM_TYPE:
+    case Data::LEVELED_ITEM_FORM_TYPE:
+        
+        return InsertIntoGeneratedBatchMap<RE::TESLevItem*>(RE::FormType::LeveledItem, data, itemLeveledListGenerateKeywordMap);
+    case Data::NPC_FORM_TYPE:
+    case Data::LEVELED_NPC_FORM_TYPE:
+        
+        return InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, data, npcLeveledListGenerateKeywordMap);
+    case Data::SPELL_FORM_TYPE:
+    case Data::LEVELED_SPELL_FORM_TYPE:
+        
+        return InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(RE::FormType::LeveledSpell, data, spellLeveledListGenerateKeywordMap);
+	}
+
+    ++removedDataCounter;
     return false;
 }
 

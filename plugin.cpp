@@ -100,9 +100,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
         start = std::chrono::system_clock::now();
         
         Manager manager;
-
-        if (manager.LoadData())
-        {
+        manager.LoadData();
+        //if (manager.LoadData())
+        //{
             // seed random number generator used for min-max count and level
             std::srand(std::time(NULL));
 
@@ -122,6 +122,16 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             {
                 manager.ProcessFocusLeveledList<RE::TESLevSpell>(RE::FormType::LeveledSpell, manager.spellLeveledHybridMap);
             }
+
+            // ----- GENERATED LEVELED LIST BATCH FUNCTIONS -----
+            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(RE::FormType::LeveledItem, manager.itemLeveledListGenerateBatchMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, manager.npcLeveledListGenerateBatchMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(RE::FormType::LeveledSpell, manager.spellLeveledListGenerateBatchMap);
+
+            // ----- GENERATED LEVELED LIST KEYWORD FUNCTIONS -----
+            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(RE::FormType::LeveledItem, manager.itemLeveledListGenerateKeywordMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, manager.npcLeveledListGenerateKeywordMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(RE::FormType::LeveledSpell, manager.spellLeveledListGenerateKeywordMap);
 
             // ----- BATCH FUNCTIONS -----
             if (!manager.itemMap.empty() || !manager.itemKeywordMap.empty())
@@ -158,28 +168,37 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 manager.GenerateContainerLeveledListsLite();
                 manager.ProcessBatchContainerLite();
             }
-
-            logger::info("");
-            logger::info("{:*^30}", "LEVELED LISTS");
-            logger::info("{} unique leveled lists batch modified", manager.uniqueListBatchModified);
-            logger::info("{} unique target leveled lists modified", manager.uniqueListFocusModified);
-            logger::info("{} total leveled list insertions", manager.totalListInserts);
-            logger::info("{} total leveled list removals", manager.totalListRemovals);
-            logger::info("{} total leveled list modifications randomly chance skipped", manager.totalListChanceSkips);
-            logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListUseAllSkips);
-            logger::info("");
-            logger::info("{:*^30}", "OUTFITS");
-            logger::info("{} unique outfits batch modified", manager.uniqueOutfitBatchModified);
-            logger::info("{} total outfit generated leveled list swaps", manager.totalOutfitSwaps);
-            logger::info("");
-            logger::info("{:*^30}", "CONTAINERS");
-            logger::info("{} unique containers batch modified", manager.uniqueContainersBatchModified);
-            //logger::info("{} total container insertions", manager.totalContainerInserts);
-            //logger::info("{} total container removals", manager.totalContainerRemovals);
-            logger::info("{} total container generated leveled list swaps", manager.totalContainerSwaps);
-            //logger::info("{} total container modifications randomly chance skipped", manager.totalListChanceSkips);
-        }
+        //}
         
+        logger::info("{:*^30}", "RESULTS");
+
+        logger::info("{} valid data found", manager.totalDataSize);
+        logger::info("{} invalid data removed", manager.removedDataCounter);
+        logger::info("{} mismatched data skipped", manager.wrongDataCounter);
+
+        logger::info("{:*^30}", "INFO");
+
+        logger::info("");
+        logger::info("{:*^30}", "LEVELED LISTS");
+        logger::info("{} unique leveled lists batch modified", manager.uniqueListBatchModified);
+        logger::info("{} unique target leveled lists modified", manager.uniqueListFocusModified);
+        logger::info("{} total leveled list insertions", manager.totalListInserts);
+        logger::info("{} total leveled list removals", manager.totalListRemovals);
+        logger::info("{} total leveled list modifications randomly chance skipped", manager.totalListChanceSkips);
+        logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListUseAllSkips);
+        logger::info("{} total leveled lists generated for leveled lists, outfits, or containers", manager.totalLeveledListGenerated);
+        logger::info("");
+        logger::info("{:*^30}", "OUTFITS");
+        logger::info("{} unique outfits batch modified", manager.uniqueOutfitBatchModified);
+        logger::info("{} total outfit generated leveled list swaps", manager.totalOutfitSwaps);
+        logger::info("");
+        logger::info("{:*^30}", "CONTAINERS");
+        logger::info("{} unique containers batch modified", manager.uniqueContainersBatchModified);
+        //logger::info("{} total container insertions", manager.totalContainerInserts);
+        //logger::info("{} total container removals", manager.totalContainerRemovals);
+        logger::info("{} total container generated leveled list swaps", manager.totalContainerSwaps);
+        //logger::info("{} total container modifications randomly chance skipped", manager.totalListChanceSkips);
+
         end = std::chrono::system_clock::now();
 
         std::chrono::duration<double> elapsed_seconds = end - start;

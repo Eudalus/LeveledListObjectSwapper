@@ -146,6 +146,9 @@ public:
     std::size_t totalContainerSwaps = 0;
     std::size_t totalOutfitSwaps = 0;
 
+    // number of leveled lists generated
+    size_t totalLeveledListGenerated = 0;
+
 private:
     template<typename T> bool SafeCircularInsertion(const T* insert, const T* list, const T* entryList);
 };
