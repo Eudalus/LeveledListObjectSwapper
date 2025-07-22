@@ -61,6 +61,10 @@ public:
 
     bool insertGeneratedKeywordMap(ItemData& data);
 
+    // add generated leveled lists to DataHandler
+    bool PushGeneratedLeveledLists();
+    template<typename T> bool PushGeneratedLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map);
+
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
     boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> itemMap;

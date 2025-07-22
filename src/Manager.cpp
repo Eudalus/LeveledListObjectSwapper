@@ -1777,6 +1777,36 @@ bool Manager::insertGeneratedKeywordMap(ItemData& data)
     return false;
 }
 
+bool Manager::PushGeneratedLeveledLists()
+{
+    PushGeneratedLeveledList<RE::TESLevItem*>(RE::FormType::LeveledItem, itemLeveledListGenerateBatchMap);
+    PushGeneratedLeveledList<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, npcLeveledListGenerateBatchMap);
+    PushGeneratedLeveledList<RE::TESLevSpell*>(RE::FormType::LeveledSpell, spellLeveledListGenerateBatchMap);
+
+    PushGeneratedLeveledList<RE::TESLevItem*>(RE::FormType::LeveledItem, itemLeveledListGenerateKeywordMap);
+    PushGeneratedLeveledList<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, npcLeveledListGenerateKeywordMap);
+    PushGeneratedLeveledList<RE::TESLevSpell*>(RE::FormType::LeveledSpell, spellLeveledListGenerateKeywordMap);
+    
+    return true;
+}
+
+template<typename T> bool Manager::PushGeneratedLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map)
+{
+    auto& leveledItemLists = RE::TESDataHandler::GetSingleton()->GetFormArray<std::remove_pointer_t<T>>();
+
+    for (auto& [targetKey, pairValue] : map)
+    {
+        leveledItemLists.push_back(pairValue.first);
+    }
+
+    return true;
+}
+
+// necessary signatures for the linker
+template bool Manager::PushGeneratedLeveledList<RE::TESLevItem*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::PushGeneratedLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::PushGeneratedLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>>& map);
+
 template<typename T> bool Manager::SafeCircularInsertionWrapper(const T* insert, const T* list)
 {
     if (!insert || !list || (insert == list))
@@ -1803,6 +1833,11 @@ template<typename T> bool Manager::SafeCircularInsertionWrapper(const T* insert,
     return value;
 }
 
+// necessary signatures for the linker
+template bool Manager::SafeCircularInsertionWrapper<RE::TESLevItem>(const RE::TESLevItem* insert, const RE::TESLevItem* list);
+template bool Manager::SafeCircularInsertionWrapper<RE::TESLevCharacter>(const RE::TESLevCharacter* insert, const RE::TESLevCharacter* list);
+template bool Manager::SafeCircularInsertionWrapper<RE::TESLevSpell>(const RE::TESLevSpell* insert, const RE::TESLevSpell* list);
+
 template<typename T> bool Manager::SafeCircularInsertion(const T* insert, const T* list, const T* entryList)
 {
     if (list)
@@ -1814,10 +1849,6 @@ template<typename T> bool Manager::SafeCircularInsertion(const T* insert, const 
 }
 
 // necessary signatures for the linker
-template bool Manager::SafeCircularInsertionWrapper<RE::TESLevItem>(const RE::TESLevItem* insert, const RE::TESLevItem* list);
-template bool Manager::SafeCircularInsertionWrapper<RE::TESLevCharacter>(const RE::TESLevCharacter* insert, const RE::TESLevCharacter* list);
-template bool Manager::SafeCircularInsertionWrapper<RE::TESLevSpell>(const RE::TESLevSpell* insert, const RE::TESLevSpell* list);
-
 template bool Manager::SafeCircularInsertion<RE::TESLevItem>(const RE::TESLevItem* insert, const RE::TESLevItem* list, const RE::TESLevItem* entryList);
 template bool Manager::SafeCircularInsertion<RE::TESLevCharacter>(const RE::TESLevCharacter* insert, const RE::TESLevCharacter* list, const RE::TESLevCharacter* entryList);
 template bool Manager::SafeCircularInsertion<RE::TESLevSpell>(const RE::TESLevSpell* insert, const RE::TESLevSpell* list, const RE::TESLevSpell* entryList);

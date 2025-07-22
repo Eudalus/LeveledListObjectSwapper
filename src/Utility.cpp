@@ -492,7 +492,7 @@ template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& f
         return T{};
     }
 
-    auto& leveledItemLists = RE::TESDataHandler::GetSingleton()->GetFormArray<std::remove_pointer_t<T>>();
+    //auto& leveledItemLists = RE::TESDataHandler::GetSingleton()->GetFormArray<std::remove_pointer_t<T>>(); // move to PushGeneratedLeveledList
 
     T value{}; // nullptr or default initialized
 
@@ -527,7 +527,7 @@ template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& f
             value->chanceNone = 0;
             value->llFlags = Data::GENERATED_LEVELED_LIST_FLAGS;
 
-            leveledItemLists.push_back(value);
+            //leveledItemLists.push_back(value); // move to PushGeneratedLeveledList
         }
     }
 

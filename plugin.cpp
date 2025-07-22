@@ -168,6 +168,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
                 manager.GenerateContainerLeveledListsLite();
                 manager.ProcessBatchContainerLite();
             }
+
+            manager.PushGeneratedLeveledLists();
+
         //}
         
         logger::info("{:*^30}", "RESULTS");
