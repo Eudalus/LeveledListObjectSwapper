@@ -485,7 +485,7 @@ template<typename T> RE::TESLevItem* Utility::CreateLeveledList(std::vector<T>& 
 template RE::TESLevItem* Utility::CreateLeveledList(std::vector<ContainerGenerateItemData>& list);
 template RE::TESLevItem* Utility::CreateLeveledList(std::vector<OutfitItemData>& list);
 
-template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list)
+template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData)
 {
     if (list.empty())
     {
@@ -499,6 +499,9 @@ template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& f
     const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<std::remove_pointer_t<T>>();
 
     uint8_t size;
+    uint8_t numberOfInsertData;
+    uint8_t i = 0;
+    bool reinsertTargetFirst = false;
 
     if (factory)
     {
@@ -506,13 +509,58 @@ template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& f
 
         if (value)
         {
-            size = std::min(list.size(), Data::MAX_ENTRY_SIZE);
+            if (targetItemData.targetFormType != Data::KEYWORD_FORM_TYPE)
+            {
+                if (((instruction & GeneratedLeveledListInstruction::ReinsertTargetOnce) == GeneratedLeveledListInstruction::ReinsertTargetOnce))
+                {
+                    size = std::min(list.size() + 1, Data::MAX_ENTRY_SIZE);
+                    numberOfInsertData = std::min(list.size() + 1, Data::MAX_ENTRY_SIZE);
 
-            value->entries.resize(size);
+                    value->entries.resize(size);
+
+                    reinsertTargetFirst = true;
+                }
+                else if (((instruction & GeneratedLeveledListInstruction::ReinsertTargetEachTime) == GeneratedLeveledListInstruction::ReinsertTargetEachTime))
+                {
+                    size = std::min((list.size() * 2) + 1, Data::MAX_ENTRY_SIZE);
+                    numberOfInsertData = std::min(list.size() + 1, Data::MAX_ENTRY_SIZE);
+
+                    value->entries.resize(size);
+
+                    reinsertTargetFirst = true;
+                }
+                else
+                {
+                    size = std::min(list.size(), Data::MAX_ENTRY_SIZE);
+                    numberOfInsertData = std::min(list.size(), Data::MAX_ENTRY_SIZE);
+
+                    value->entries.resize(size);
+                }
+            }
+            else
+            {
+                size = std::min(list.size(), Data::MAX_ENTRY_SIZE);
+                numberOfInsertData = std::min(list.size(), Data::MAX_ENTRY_SIZE);
+
+                value->entries.resize(size);
+            } 
 
             RE::SimpleArray<RE::LEVELED_OBJECT>& entries = value->entries;
 
-            for (uint8_t i = 0; i < size; ++i)
+            if(reinsertTargetFirst)
+            {
+                // ensure target item enters the generated leveled list
+                // i = 0
+                entries[i].form = targetItemData.targetForm;
+                entries[i].count = 1;
+                entries[i].level = 1;
+                entries[i].itemExtra = nullptr;
+
+                i = 1;
+            }
+
+            // insert items
+            for (; i < numberOfInsertData; ++i)
             {
                 entries[i].form = list[i].insertForm;
                 entries[i].count = (rand() % (list[i].maxCount - list[i].minCount + 1)) + list[i].minCount;
@@ -520,12 +568,22 @@ template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& f
                 entries[i].itemExtra = nullptr;
             }
 
+            // try to ensure target form is in leveled list equal to number of insert items
+            // size should only be greater than i if GeneratedLeveledListInstruction::ReinsertTargetEachTime was set and there's still room for more items (i < 255)
+            for (; i < size; ++i)
+            {
+                entries[i].form = targetItemData.targetForm;
+                entries[i].count = 1;
+                entries[i].level = 1;
+                entries[i].itemExtra = nullptr;
+            }
+
+            value->numEntries = static_cast<uint8_t>(size);
+            value->chanceNone = 0;
+            value->llFlags = static_cast<RE::TESLeveledList::Flag>(Data::GENERATED_LEVELED_LIST_FLAGS | static_cast<RE::TESLeveledList::Flag>(instruction & GeneratedLeveledListInstruction::AddUseAllFlag));
+
             // sort, don't need to sanitize since data insert loop handles it
             std::sort(entries.begin(), entries.end(), Utility::CompareLeveledListEntryLevel);
-
-            value->numEntries = size;
-            value->chanceNone = 0;
-            value->llFlags = Data::GENERATED_LEVELED_LIST_FLAGS;
 
             //leveledItemLists.push_back(value); // move to PushGeneratedLeveledList
         }
@@ -535,6 +593,6 @@ template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& f
 }
 
 // necessary signatures for the linker
-template RE::TESLevItem* Utility::GenerateLeveledList<RE::TESLevItem*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list);
-template RE::TESLevCharacter* Utility::GenerateLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list);
-template RE::TESLevSpell* Utility::GenerateLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list);
+template RE::TESLevItem* Utility::GenerateLeveledList<RE::TESLevItem*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData);
+template RE::TESLevCharacter* Utility::GenerateLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData);
+template RE::TESLevSpell* Utility::GenerateLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData);

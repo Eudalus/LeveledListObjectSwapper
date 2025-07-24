@@ -1658,26 +1658,28 @@ bool Manager::InsertGeneratedBatchMap(ItemData& data)
     case Data::ARMOR_FORM_TYPE:
     case Data::LEVELED_ITEM_FORM_TYPE:
         
-        return InsertIntoGeneratedBatchMap<RE::TESLevItem*>(RE::FormType::LeveledItem, data, itemLeveledListGenerateBatchMap);
+        return InsertIntoGeneratedBatchMap<RE::TESLevItem*>(RE::FormType::LeveledItem, data, itemLeveledListGenerateBatchMap, Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN);
     case Data::NPC_FORM_TYPE:
     case Data::LEVELED_NPC_FORM_TYPE:
         
-        return InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, data, npcLeveledListGenerateBatchMap);
+        return InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, data, npcLeveledListGenerateBatchMap, Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN);
     case Data::SPELL_FORM_TYPE:
     case Data::LEVELED_SPELL_FORM_TYPE:
         
-        return InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(RE::FormType::LeveledSpell, data, spellLeveledListGenerateBatchMap);
+        return InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(RE::FormType::LeveledSpell, data, spellLeveledListGenerateBatchMap, Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN);
 	}
 
     ++removedDataCounter;
     return false;
 }
 
-template<typename T> bool Manager::InsertIntoGeneratedBatchMap(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map)
+template<typename T> bool Manager::InsertIntoGeneratedBatchMap(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<T, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map, const uint16_t& offset)
 {
     if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
     {
-        mapIterator->second.second.emplace_back(data);
+        mapIterator->second.second.second.emplace_back(data);
+        
+        Utility::SetGeneratedLeveledListInstruction(mapIterator->second.second.first, data.useAll, offset);
 
         //++totalDataSize;
 
@@ -1685,8 +1687,10 @@ template<typename T> bool Manager::InsertIntoGeneratedBatchMap(const RE::FormTyp
     }
     else
     {
-        map.emplace(data.targetForm->formID, std::make_pair(T{}, std::vector<ContainerGenerateItemData>()));
-        map.at(data.targetForm->formID).second.emplace_back(data);
+        map.emplace(data.targetForm->formID, std::make_pair(T{}, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>()));
+        map.at(data.targetForm->formID).second.second.emplace_back(data);
+
+        Utility::SetGeneratedLeveledListInstruction(mapIterator->second.second.first, data.useAll, offset);
 
         //++totalTargetSize;
         //++totalDataSize;
@@ -1699,55 +1703,58 @@ template<typename T> bool Manager::InsertIntoGeneratedBatchMap(const RE::FormTyp
 }
 
 // necessary signatures for the linker
-template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevItem*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
-template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>>& map);
-template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevItem*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map, const uint16_t& offset);
+template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map, const uint16_t& offset);
+template bool Manager::InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map, const uint16_t& offset);
 
-template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map)
+template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map)
 {
     for (auto& [targetKey, pairValue] : map)
     {
         //if (!pairValue.first)
         //{
-        pairValue.first = Utility::GenerateLeveledList<T>(formType, pairValue.second);
 
-        if (pairValue.first)
+        // construct ItemData for generated leveled list and reinsert
+        ItemData leveledListItemData;
+
+        leveledListItemData.targetForm = RE::TESForm::LookupByID(targetKey);
+
+        if (leveledListItemData.targetForm)
         {
-            ++totalLeveledListGenerated;
+            
+            leveledListItemData.targetFormType = Utility::CheckFormType(leveledListItemData.targetForm);
+            
+            // useAll flag TRUE, will insert this generated leveled list into existing leveled lists with the useAll flag
+            // (does not set set this generated leveled list's useAll flag)
+            leveledListItemData.useAll = 1;
 
-            // construct ItemData for generated leveled list and reinsert
-            ItemData leveledListItemData;
+            leveledListItemData.processCounter = Data::MAX_ENTRY_SIZE;
+            leveledListItemData.chance = 100.0f;
 
-            leveledListItemData.targetForm = RE::TESForm::LookupByID(targetKey);
+            leveledListItemData.minCount = 1;
+            leveledListItemData.maxCount = 1;
 
-            if (leveledListItemData.targetForm)
+            leveledListItemData.minLevel = 1;
+            leveledListItemData.maxLevel = 1;
+
+            leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL;
+
+            pairValue.first = Utility::GenerateLeveledList<T>(formType, pairValue.second.second, pairValue.second.first, leveledListItemData);
+
+            leveledListItemData.insertForm = pairValue.first;
+            leveledListItemData.insertFormType = Utility::CheckFormType(leveledListItemData.insertForm);
+
+            if (pairValue.first)
             {
-                leveledListItemData.targetFormType = Utility::CheckFormType(leveledListItemData.targetForm);
-                leveledListItemData.insertForm = pairValue.first;
-                leveledListItemData.insertFormType = Utility::CheckFormType(leveledListItemData.insertForm);
+                ++totalLeveledListGenerated;
 
-                //if (Utility::CheckCompatibleLeveledListFormTypes(leveledListItemData.insertFormType, leveledListItemData.targetFormType)) // performed in DirectProtocol
-                //{
-                    // useAll flag TRUE, will insert this insert leveled list into leveled lists with the useAll flag
-                    // (does not set this insert leveled list's useAll flag)
-                    leveledListItemData.useAll = 1;
-
-                    leveledListItemData.processCounter = Data::MAX_ENTRY_SIZE;
-                    leveledListItemData.chance = 100.0f;
-
-                    leveledListItemData.minCount = 1;
-                    leveledListItemData.maxCount = 1;
-
-                    leveledListItemData.minLevel = 1;
-                    leveledListItemData.maxLevel = 1;
-
-                    leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL;
-
-                    // reinsert generated leveled list
-                    DirectProtocol(leveledListItemData);
-                //}
+                // reinsert generated leveled list
+                DirectProtocol(leveledListItemData);
+            
             }
         }
+
+        
         //}
     }
 
@@ -1755,9 +1762,9 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
 }
 
 // necessary signatures for the linker
-template bool Manager::GenerateBatchMapLeveledList<RE::TESLevItem*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
-template bool Manager::GenerateBatchMapLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>>& map);
-template bool Manager::GenerateBatchMapLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::GenerateBatchMapLeveledList<RE::TESLevItem*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map);
+template bool Manager::GenerateBatchMapLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map);
+template bool Manager::GenerateBatchMapLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map);
 
 bool Manager::insertGeneratedKeywordMap(ItemData& data)
 {
@@ -1767,15 +1774,15 @@ bool Manager::insertGeneratedKeywordMap(ItemData& data)
     case Data::ARMOR_FORM_TYPE:
     case Data::LEVELED_ITEM_FORM_TYPE:
         
-        return InsertIntoGeneratedBatchMap<RE::TESLevItem*>(RE::FormType::LeveledItem, data, itemLeveledListGenerateKeywordMap);
+        return InsertIntoGeneratedBatchMap<RE::TESLevItem*>(RE::FormType::LeveledItem, data, itemLeveledListGenerateKeywordMap, Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN);
     case Data::NPC_FORM_TYPE:
     case Data::LEVELED_NPC_FORM_TYPE:
         
-        return InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, data, npcLeveledListGenerateKeywordMap);
+        return InsertIntoGeneratedBatchMap<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, data, npcLeveledListGenerateKeywordMap, Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN);
     case Data::SPELL_FORM_TYPE:
     case Data::LEVELED_SPELL_FORM_TYPE:
         
-        return InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(RE::FormType::LeveledSpell, data, spellLeveledListGenerateKeywordMap);
+        return InsertIntoGeneratedBatchMap<RE::TESLevSpell*>(RE::FormType::LeveledSpell, data, spellLeveledListGenerateKeywordMap, Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN);
 	}
 
     ++removedDataCounter;
@@ -1795,7 +1802,7 @@ bool Manager::PushGeneratedLeveledLists()
     return true;
 }
 
-template<typename T> bool Manager::PushGeneratedLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map)
+template<typename T> bool Manager::PushGeneratedLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map)
 {
     auto& leveledItemLists = RE::TESDataHandler::GetSingleton()->GetFormArray<std::remove_pointer_t<T>>();
 
@@ -1808,9 +1815,9 @@ template<typename T> bool Manager::PushGeneratedLeveledList(const RE::FormType& 
 }
 
 // necessary signatures for the linker
-template bool Manager::PushGeneratedLeveledList<RE::TESLevItem*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
-template bool Manager::PushGeneratedLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>>& map);
-template bool Manager::PushGeneratedLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>>& map);
+template bool Manager::PushGeneratedLeveledList<RE::TESLevItem*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map);
+template bool Manager::PushGeneratedLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map);
+template bool Manager::PushGeneratedLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map);
 
 template<typename T> bool Manager::SafeCircularInsertionWrapper(const T* insert, const T* list)
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-enum class GeneratedLeveledListInstruction : uint8_t
+enum GeneratedLeveledListInstruction : uint8_t
 {
 	None = 0, // generated leveled list inserted as protocol 153
 	CountOne = 1 << 0, // generated leveled list insert as protocol 152 or 150 with LevelOne set

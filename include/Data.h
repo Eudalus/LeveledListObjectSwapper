@@ -94,7 +94,7 @@ namespace Data
     // leveled list will be generated, have items inserted, then entered into batch map with a protocol of 153
     inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_MIN = 170;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_BASIC = 170;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_COUNT_ONE = 171;
+    /*inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_COUNT_ONE = 171;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_LEVEL_ONE = 172;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_COUNT_LEVEL_ONE = 173;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_USEALL = 174;
@@ -116,8 +116,8 @@ namespace Data
     inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_REINSERT_TARGET_EACH_USEALL = 190;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_REINSERT_TARGET_EACH_USEALL_COUNT_ONE = 191;
     inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_REINSERT_TARGET_EACH_USEALL_LEVEL_ONE = 192;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_REINSERT_TARGET_EACH_USEALL_COUNT_LEVEL_ONE = 193;
-    inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_MAX = 193;
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_REINSERT_TARGET_EACH_USEALL_COUNT_LEVEL_ONE = 193;*/
+    inline const std::uint16_t VALID_MULTI_PROTOCOL_SWAP_GENERATE_MAX = 170;
     
     // ----- SPECIFIC LEVELED LIST SINGLE INSERTION PROTOCOLS -----
 

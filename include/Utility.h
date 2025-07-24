@@ -5,6 +5,7 @@
 #include "SmallerItemData.h"
 #include "OutfitItemData.h"
 #include "ContainerGenerateItemData.h"
+#include "GeneratedLeveledListInstruction.h"
 
 class Utility
 {
@@ -72,5 +73,12 @@ public:
 
     template<typename T> static RE::TESLevItem* CreateLeveledList(std::vector<T>& list);
 
-    template<typename T> static T GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list);
+    template<typename T> static T GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData);
+
+    template<typename T, typename K> static bool SetGeneratedLeveledListInstruction(GeneratedLeveledListInstruction& instruction, const T& modifier, const K& offset)
+    {
+        instruction = static_cast<GeneratedLeveledListInstruction>(instruction | static_cast<GeneratedLeveledListInstruction>(modifier - offset));
+
+        return true;
+    }
 };

@@ -57,14 +57,14 @@ public:
     //bool InsertIntoGeneratedBatchMap(ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
     //bool GenerateBatchMapLeveledList(boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>>& map);
 
-    template<typename T> bool InsertIntoGeneratedBatchMap(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map);
-    template<typename T> bool GenerateBatchMapLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map);
+    template<typename T> bool InsertIntoGeneratedBatchMap(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<T, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map, const uint16_t& offset);
+    template<typename T> bool GenerateBatchMapLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map);
 
     bool insertGeneratedKeywordMap(ItemData& data);
 
     // add generated leveled lists to DataHandler
     bool PushGeneratedLeveledLists();
-    template<typename T> bool PushGeneratedLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::vector<ContainerGenerateItemData>>>& map);
+    template<typename T> bool PushGeneratedLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<T, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map);
 
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
@@ -102,16 +102,16 @@ public:
     // ----- LEVELED LIST GENERATE BATCH MAPS -----
     // key is target item or leveled list FormID in existing leveled list, value pair first -> RE::TESLevItem* will be a pointer to factory generated leveled list to insert in place of target
     // value pair second -> std::vector<SmallerLeveledObject> will be the items to insert into the value pair first factory generated leveled list
-    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>> itemLeveledListGenerateBatchMap;
-    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>> npcLeveledListGenerateBatchMap;
-    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>> spellLeveledListGenerateBatchMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>> itemLeveledListGenerateBatchMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>> npcLeveledListGenerateBatchMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>> spellLeveledListGenerateBatchMap;
 
     // ----- LEVELED LIST GENERATE KEYWORD MAPS -----
     // key is target keyword FormID in existing leveled list, value pair first -> RE::TESLevItem* will be a pointer to factory generated leveled list to insert in place of target
     // value pair second -> std::vector<SmallerLeveledObject> will be the items to insert into the value pair first factory generated leveled list
-    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<ContainerGenerateItemData>>> itemLeveledListGenerateKeywordMap;
-    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::vector<ContainerGenerateItemData>>> npcLeveledListGenerateKeywordMap;
-    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::vector<ContainerGenerateItemData>>> spellLeveledListGenerateKeywordMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>> itemLeveledListGenerateKeywordMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevCharacter*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>> npcLeveledListGenerateKeywordMap;
+    boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevSpell*, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>> spellLeveledListGenerateKeywordMap;
 
     std::default_random_engine randomEngine;
 
