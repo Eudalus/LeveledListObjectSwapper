@@ -190,6 +190,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
         logger::info("{} total leveled list modifications randomly chance skipped", manager.totalListChanceSkips);
         logger::info("{} total leveled list modifications skipped due to UseAll flag", manager.totalListUseAllSkips);
         logger::info("{} total leveled lists generated for leveled lists, outfits, or containers", manager.totalLeveledListGenerated);
+        logger::info("{} total target item automatically reinserted into generated leveled lists", manager.totalGeneratedLeveledListTargetReinserts);
         logger::info("");
         logger::info("{:*^30}", "OUTFITS");
         logger::info("{} unique outfits batch modified", manager.uniqueOutfitBatchModified);

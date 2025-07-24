@@ -73,11 +73,11 @@ public:
 
     template<typename T> static RE::TESLevItem* CreateLeveledList(std::vector<T>& list);
 
-    template<typename T> static T GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData);
+    template<typename T> static T GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData, size_t& targetReinsertCounter);
 
-    template<typename T, typename K> static bool SetGeneratedLeveledListInstruction(GeneratedLeveledListInstruction& instruction, const T& modifier, const K& offset)
+    template<typename T> static bool SetGeneratedLeveledListInstruction(GeneratedLeveledListInstruction& instruction, const T& modifier)
     {
-        instruction = static_cast<GeneratedLeveledListInstruction>(instruction | static_cast<GeneratedLeveledListInstruction>(modifier - offset));
+        instruction = static_cast<GeneratedLeveledListInstruction>(instruction | static_cast<GeneratedLeveledListInstruction>(modifier));
 
         return true;
     }

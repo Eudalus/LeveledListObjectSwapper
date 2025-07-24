@@ -1675,6 +1675,7 @@ bool Manager::InsertGeneratedBatchMap(ItemData& data)
 
 template<typename T> bool Manager::InsertIntoGeneratedBatchMap(const RE::FormType& formType, ItemData& data, boost::unordered_flat_map<RE::FormID, std::pair<T, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>>& map, const uint16_t& offset)
 {
+    /*
     if (auto mapIterator = map.find(data.targetForm->formID); mapIterator != map.end())
     {
         mapIterator->second.second.second.emplace_back(data);
@@ -1687,8 +1688,32 @@ template<typename T> bool Manager::InsertIntoGeneratedBatchMap(const RE::FormTyp
     }
     else
     {
-        map.emplace(data.targetForm->formID, std::make_pair(T{}, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>()));
+        // map.emplace(data.targetForm->formID, std::make_pair(T{}, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>()));
+
+        // apparently more efficient to prevent data creation then copy
+        
+        //map.emplace(
+        //    data.targetForm->formID, 
+        //    std::pair<T, std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>>(
+        //        std::piecewise_construct, 
+        //        std::forward_as_tuple(T{}), 
+        //        std::forward_as_tuple(
+        //            std::pair<GeneratedLeveledListInstruction, std::vector<ContainerGenerateItemData>>(
+        //                std::piecewise_construct, 
+        //                std::forward_as_tuple(), 
+        //                std::forward_as_tuple()
+        //            )
+        //        )
+        //    )
+        //);
+        
+
+        // shorthand, nice
+        map.emplace(std::piecewise_construct, std::forward_as_tuple(data.targetForm->formID), std::forward_as_tuple());
+
         map.at(data.targetForm->formID).second.second.emplace_back(data);
+
+        map.emplace(std::piecewise_construct, std::forward_as_tuple(data.targetForm->formID), std::forward_as_tuple()).first->second.second.second.emplace_back(data);
 
         Utility::SetGeneratedLeveledListInstruction(mapIterator->second.second.first, data.useAll, offset);
 
@@ -1700,6 +1725,28 @@ template<typename T> bool Manager::InsertIntoGeneratedBatchMap(const RE::FormTyp
 
     ++removedDataCounter;
     return false;
+
+    */
+
+    // single hash lookup
+    auto [iterator, wasInserted] = map.emplace(
+        std::piecewise_construct, 
+        std::forward_as_tuple(data.targetForm->formID), 
+        std::forward_as_tuple()
+    );
+
+    /*
+    if (wasInserted)
+    {
+        iterator->second.second.first = GeneratedLeveledListInstruction::None;
+    }
+    */
+
+    iterator->second.second.second.emplace_back(data);
+
+    Utility::SetGeneratedLeveledListInstruction(iterator->second.second.first, data.useAll);
+
+    return true;
 }
 
 // necessary signatures for the linker
@@ -1721,14 +1768,13 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
 
         if (leveledListItemData.targetForm)
         {
-            
             leveledListItemData.targetFormType = Utility::CheckFormType(leveledListItemData.targetForm);
             
             // useAll flag TRUE, will insert this generated leveled list into existing leveled lists with the useAll flag
             // (does not set set this generated leveled list's useAll flag)
             leveledListItemData.useAll = 1;
 
-            leveledListItemData.processCounter = Data::MAX_ENTRY_SIZE;
+            //leveledListItemData.processCounter = Data::MAX_ENTRY_SIZE;
             leveledListItemData.chance = 100.0f;
 
             leveledListItemData.minCount = 1;
@@ -1737,15 +1783,38 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
             leveledListItemData.minLevel = 1;
             leveledListItemData.maxLevel = 1;
 
-            leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL;
+            const GeneratedLeveledListInstruction& instruction = pairValue.second.first;
+            bool countOne = ((instruction & GeneratedLeveledListInstruction::CountOne) == GeneratedLeveledListInstruction::CountOne);
+            bool levelOne = ((instruction & GeneratedLeveledListInstruction::LevelOne) == GeneratedLeveledListInstruction::LevelOne);
 
-            pairValue.first = Utility::GenerateLeveledList<T>(formType, pairValue.second.second, pairValue.second.first, leveledListItemData);
+            if (countOne && levelOne)
+            {
+                leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC; // don't use target count or level
+            }
+            else if (levelOne)
+            {
+                leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT; // still use target count
+            }
+            else if(countOne)
+            {
+                leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_LEVEL; // still use target level
+            }
+            else
+            {
+                leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL; // use target count and level
+            }
 
-            leveledListItemData.insertForm = pairValue.first;
-            leveledListItemData.insertFormType = Utility::CheckFormType(leveledListItemData.insertForm);
+            //logger::debug("PRE GENERATE LEVELED LIST: #{} ----- INSTRUCTION FLAGS: {}", totalGeneratedLeveledListTargetReinserts, static_cast<uint8_t>(pairValue.second.first));
+
+            pairValue.first = Utility::GenerateLeveledList<T>(formType, pairValue.second.second, pairValue.second.first, leveledListItemData, totalGeneratedLeveledListTargetReinserts);
+
+            //logger::debug("POST GENERATE LEVELED LIST: #{} ----- INSTRUCTION FLAGS: {}", totalGeneratedLeveledListTargetReinserts, static_cast<uint8_t>(pairValue.second.first));
 
             if (pairValue.first)
             {
+                leveledListItemData.insertForm = pairValue.first;
+                leveledListItemData.insertFormType = Utility::CheckFormType(leveledListItemData.insertForm);
+
                 ++totalLeveledListGenerated;
 
                 // reinsert generated leveled list

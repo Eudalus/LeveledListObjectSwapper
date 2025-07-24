@@ -154,6 +154,12 @@ public:
     // number of leveled lists generated
     size_t totalLeveledListGenerated = 0;
 
+    // number of times generated leveled lists have target item reinserted due to repurposed use all flag
+    // example:
+    // Protocol=170
+    // UseAll=8
+    size_t totalGeneratedLeveledListTargetReinserts = 0;
+
 private:
     template<typename T> bool SafeCircularInsertion(const T* insert, const T* list, const T* entryList);
 };
