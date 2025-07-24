@@ -1735,7 +1735,12 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
                     leveledListItemData.processCounter = Data::MAX_ENTRY_SIZE;
                     leveledListItemData.chance = 100.0f;
 
-                    // do not need to modify level or count since it will use existing target level and count
+                    leveledListItemData.minCount = 1;
+                    leveledListItemData.maxCount = 1;
+
+                    leveledListItemData.minLevel = 1;
+                    leveledListItemData.maxLevel = 1;
+
                     leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL;
 
                     // reinsert generated leveled list

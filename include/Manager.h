@@ -10,6 +10,7 @@
 #include "ContainerGenerateItemData.h"
 #include "ContainerGenerateData.h"
 #include "SmallerContainerObject.h"
+#include "GeneratedLeveledListInstruction.h"
 
 namespace logger = SKSE::log;
 
