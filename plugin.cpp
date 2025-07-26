@@ -124,14 +124,14 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             }
 
             // ----- GENERATED LEVELED LIST BATCH FUNCTIONS -----
-            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(RE::FormType::LeveledItem, manager.itemLeveledListGenerateBatchMap);
-            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, manager.npcLeveledListGenerateBatchMap);
-            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(RE::FormType::LeveledSpell, manager.spellLeveledListGenerateBatchMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(manager.itemLeveledListGenerateBatchMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(manager.npcLeveledListGenerateBatchMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(manager.spellLeveledListGenerateBatchMap);
 
             // ----- GENERATED LEVELED LIST KEYWORD FUNCTIONS -----
-            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(RE::FormType::LeveledItem, manager.itemLeveledListGenerateKeywordMap);
-            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(RE::FormType::LeveledNPC, manager.npcLeveledListGenerateKeywordMap);
-            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(RE::FormType::LeveledSpell, manager.spellLeveledListGenerateKeywordMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(manager.itemLeveledListGenerateKeywordMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(manager.npcLeveledListGenerateKeywordMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(manager.spellLeveledListGenerateKeywordMap);
 
             // ----- BATCH FUNCTIONS -----
             if (!manager.itemMap.empty() || !manager.itemKeywordMap.empty())
