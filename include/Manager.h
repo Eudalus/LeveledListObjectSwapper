@@ -89,7 +89,7 @@ public:
     // key is target item or leveled list FormID in outfit, value pair first -> RE::TESLevItem* will be pointer to factory generated leveled list to insert in place of target
     // value pair second -> std::vector<ItemData> will be the items to insert into the value pair first factory generated leveled list
     //boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<OutfitItemData>>> itemOutfitMap;
-    boost::unordered_flat_map<RE::FormID, GenerateCollection> itemOutfitMap;
+    boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemOutfitMap;
 
     // ----- CONTAINER MAP -----
     // key is target item or leveled list in container, value pair first -> second -> std::vector<ItemData> should have a leveled list generated for value pair first -> first -> RE::TESLevItem*

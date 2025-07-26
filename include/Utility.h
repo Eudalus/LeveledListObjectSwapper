@@ -6,6 +6,8 @@
 #include "OutfitItemData.h"
 #include "ContainerGenerateItemData.h"
 #include "GeneratedLeveledListInstruction.h"
+#include "boost_unordered.hpp"
+#include "GenerateCollection.h"
 
 class Utility
 {
@@ -74,6 +76,8 @@ public:
     template<typename T> static RE::TESLevItem* CreateLeveledList(std::vector<T>& list);
 
     template<typename T> static T GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData, size_t& targetReinsertCounter);
+
+    template<typename T> static T GenerateLeveledList(GenerateCollection<T>& collection, size_t& targetReinsertCounter);
 
     template<typename T> static bool SetGeneratedLeveledListInstruction(GeneratedLeveledListInstruction& instruction, const T& modifier)
     {

@@ -601,3 +601,122 @@ template<typename T> static T Utility::GenerateLeveledList(const RE::FormType& f
 template RE::TESLevItem* Utility::GenerateLeveledList<RE::TESLevItem*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData, size_t& targetReinsertCounter);
 template RE::TESLevCharacter* Utility::GenerateLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData, size_t& targetReinsertCounter);
 template RE::TESLevSpell* Utility::GenerateLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData, size_t& targetReinsertCounter);
+
+template<typename T> T Utility::GenerateLeveledList(GenerateCollection<T>& collection, size_t& targetReinsertCounter)
+{
+    T value{}; // nullptr or default initialized
+
+    if (collection.insertVector.empty())
+    {
+        return value;
+    }
+
+    const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<std::remove_pointer_t<T>>();
+
+    if (!factory)
+    {
+        return value;
+    }
+
+    value = factory->Create();
+
+    if (!value)
+    {
+        return value;
+    }
+
+    uint8_t size;
+    uint8_t numberOfInsertData;
+    uint8_t entriesIndex = 0;
+    bool reinsertTargetFirst = false;
+
+    if (collection.targetFormType != Data::KEYWORD_FORM_TYPE) // can only reinsert non-keyword types
+    {
+        if (((collection.instruction & GeneratedLeveledListInstruction::ReinsertTargetOnce) == GeneratedLeveledListInstruction::ReinsertTargetOnce))
+        {
+            size = std::min(collection.insertVector.size() + 1, Data::MAX_ENTRY_SIZE);
+            numberOfInsertData = std::min(collection.insertVector.size() + 1, Data::MAX_ENTRY_SIZE);
+
+            value->entries.resize(size);
+
+            reinsertTargetFirst = true;
+        }
+        else if (((collection.instruction & GeneratedLeveledListInstruction::ReinsertTargetEachTime) == GeneratedLeveledListInstruction::ReinsertTargetEachTime))
+        {
+            //size = std::min((list.size() * 2) + 1, Data::MAX_ENTRY_SIZE);
+            size = std::min((collection.insertVector.size() * 2), Data::MAX_ENTRY_SIZE);
+            numberOfInsertData = std::min(collection.insertVector.size() + 1, Data::MAX_ENTRY_SIZE);
+
+            value->entries.resize(size);
+
+            reinsertTargetFirst = true;
+        }
+        else
+        {
+            size = std::min(collection.insertVector.size(), Data::MAX_ENTRY_SIZE);
+            numberOfInsertData = std::min(collection.insertVector.size(), Data::MAX_ENTRY_SIZE);
+
+            value->entries.resize(size);
+        }
+    }
+    else // cannot reinsert keyword types
+    {
+        size = std::min(collection.insertVector.size(), Data::MAX_ENTRY_SIZE);
+        numberOfInsertData = std::min(collection.insertVector.size(), Data::MAX_ENTRY_SIZE);
+
+        value->entries.resize(size);
+    } 
+
+    RE::SimpleArray<RE::LEVELED_OBJECT>& entries = value->entries;
+
+    if(reinsertTargetFirst)
+    {
+        // ensure target item enters the generated leveled list
+        // entriesIndex = 0
+        entries[entriesIndex].form = collection.targetForm;
+        entries[entriesIndex].count = 1;
+        entries[entriesIndex].level = 1;
+        entries[entriesIndex].itemExtra = nullptr;
+
+        entriesIndex = 1;
+
+        ++targetReinsertCounter;
+    }
+
+    std::vector<GenerateItemData>& list = collection.insertVector;
+
+    // insert items
+    for (size_t listIndex = 0; entriesIndex < numberOfInsertData; ++entriesIndex, ++listIndex)
+    {
+        entries[entriesIndex].form = list[listIndex].insertForm;
+        entries[entriesIndex].count = list[listIndex].count; //(rand() % (list[listIndex].maxCount - list[listIndex].minCount + 1)) + list[listIndex].minCount;
+        entries[entriesIndex].level = list[listIndex].level; //(rand() % (list[listIndex].maxLevel - list[listIndex].minLevel + 1)) + list[listIndex].minLevel;
+        entries[entriesIndex].itemExtra = nullptr;
+    }
+
+    // try to ensure target form is in leveled list equal to number of insert items
+    // size should only be greater than entriesIndex if GeneratedLeveledListInstruction::ReinsertTargetEachTime was set and there's still room for more items (entriesIndex < 255)
+    for (; entriesIndex < size; ++entriesIndex)
+    {
+        entries[entriesIndex].form = collection.targetForm;
+        entries[entriesIndex].count = 1;
+        entries[entriesIndex].level = 1;
+        entries[entriesIndex].itemExtra = nullptr;
+
+        ++targetReinsertCounter;
+    }
+
+    value->numEntries = static_cast<uint8_t>(size);
+    value->chanceNone = 0;
+    value->llFlags = static_cast<RE::TESLeveledList::Flag>(Data::GENERATED_LEVELED_LIST_FLAGS | static_cast<RE::TESLeveledList::Flag>(collection.instruction & GeneratedLeveledListInstruction::AddUseAllFlag));
+
+    // sort, don't need to sanitize since data insert loop handles it
+    std::sort(entries.begin(), entries.end(), Utility::CompareLeveledListEntryLevel);
+
+    return value;
+}
+
+// necessary signatures for the linker
+template RE::TESLevItem* Utility::GenerateLeveledList<RE::TESLevItem*>(GenerateCollection<RE::TESLevItem*>& collection, size_t& targetReinsertCounter);
+template RE::TESLevCharacter* Utility::GenerateLeveledList<RE::TESLevCharacter*>(GenerateCollection<RE::TESLevCharacter*>& collection, size_t& targetReinsertCounter);
+template RE::TESLevSpell* Utility::GenerateLeveledList<RE::TESLevSpell*>(GenerateCollection<RE::TESLevSpell*>& collection, size_t& targetReinsertCounter);

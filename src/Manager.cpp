@@ -1177,7 +1177,7 @@ bool Manager::InsertIntoOutfitMap(ItemData& data)
 bool Manager::ProcessBatchOutfit()
 {
     auto& outfitList = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::BGSOutfit>();
-    size_t outfitListSize = outfitList.size();
+    const size_t outfitListSize = outfitList.size();
     size_t outfitItemsSize;
     bool outfitModified;
 
@@ -1195,9 +1195,9 @@ bool Manager::ProcessBatchOutfit()
                 {
                     if (auto mapIterator = itemOutfitMap.find(outfitItems[k]->formID); mapIterator != itemOutfitMap.end())
                     {
-                        if (mapIterator->second.first)
+                        if (mapIterator->second.generatedLeveledList)
                         {
-                            outfitItems[k] = mapIterator->second.first;
+                            outfitItems[k] = mapIterator->second.generatedLeveledList;
                             ++totalOutfitSwaps;
                             outfitModified = true;
                         }
@@ -1226,9 +1226,9 @@ bool Manager::GenerateOutfitLeveledLists()
     {
         //if (!pairValue.first)
         //{
-        pairValue.first = Utility::CreateLeveledList(pairValue.second);
+        pairValue.generatedLeveledList = Utility::GenerateLeveledList<RE::TESLevItem*>(pairValue, totalGeneratedLeveledListTargetReinserts);
 
-        if (pairValue.first)
+        if (pairValue.generatedLeveledList)
         {
             ++totalLeveledListGenerated;
             #if defined(USING_UPKEEP_MANAGER)

@@ -4,11 +4,13 @@
 #include "GeneratedLeveledListInstruction.h"
 #include "GenerateItemData.h"
 
+template <typename T>
 class GenerateCollection
 {
 public:
 	std::vector<GenerateItemData> insertVector;
-	RE::TESForm* targetForm{}; // RE::TESLevItem*, RE::TESLevCharacter*, RE::TESLevSpell*
+	RE::TESForm* targetForm{};
+	T generatedLeveledList{}; // RE::TESLevItem*, RE::TESLevCharacter*, RE::TESLevSpell*
 	uint8_t targetFormType{};
 	GeneratedLeveledListInstruction instruction = GeneratedLeveledListInstruction::None;
 };
