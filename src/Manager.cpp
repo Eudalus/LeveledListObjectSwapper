@@ -1125,6 +1125,7 @@ void Manager::InsertLeveledListVectorBuffer(const std::size_t insertLimit, std::
 
 bool Manager::InsertIntoOutfitMap(ItemData& data)
 {
+    /*
     if (Utility::CheckCompatibleOutfitFormTypes(data.insertFormType, data.targetFormType))
     {
         if (auto mapIterator = itemOutfitMap.find(data.targetForm->formID); mapIterator != itemOutfitMap.end())
@@ -1145,6 +1146,28 @@ bool Manager::InsertIntoOutfitMap(ItemData& data)
 
             return true;
         }
+    }
+
+    ++wrongDataCounter;
+    return false;
+    */
+
+    if (Utility::CheckCompatibleOutfitFormTypes(data.insertFormType, data.targetFormType))
+    {
+        // single hash lookup
+        auto [iterator, wasInserted] = itemOutfitMap.emplace(
+            std::piecewise_construct, 
+            std::forward_as_tuple(data.targetForm->formID), 
+            std::forward_as_tuple()
+        );
+
+        iterator->second.insertVector.emplace_back(data);
+        iterator->second.targetForm = data.targetForm;
+        iterator->second.targetFormType = data.targetFormType;
+
+        Utility::SetGeneratedLeveledListInstruction(iterator->second.instruction, data.useAll);
+
+        return true;
     }
 
     ++wrongDataCounter;
@@ -1804,11 +1827,7 @@ template<typename T> bool Manager::GenerateBatchMapLeveledList(const RE::FormTyp
                 leveledListItemData.protocol = Data::VALID_MULTI_PROTOCOL_REMOVE_BASIC_COUNT_LEVEL; // use target count and level
             }
 
-            //logger::debug("PRE GENERATE LEVELED LIST: #{} ----- INSTRUCTION FLAGS: {}", totalGeneratedLeveledListTargetReinserts, static_cast<uint8_t>(pairValue.second.first));
-
             pairValue.first = Utility::GenerateLeveledList<T>(formType, pairValue.second.second, pairValue.second.first, leveledListItemData, totalGeneratedLeveledListTargetReinserts);
-
-            //logger::debug("POST GENERATE LEVELED LIST: #{} ----- INSTRUCTION FLAGS: {}", totalGeneratedLeveledListTargetReinserts, static_cast<uint8_t>(pairValue.second.first));
 
             if (pairValue.first)
             {
