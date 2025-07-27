@@ -42,7 +42,6 @@ public:
     //bool GenerateContainerLeveledLists();
     bool GenerateContainerLeveledListsLite();
     template<typename T> bool SafeCircularInsertionWrapper(const T* insert, const T* list);
-    
 
     // Note that insertBufferElements is not capacity, Data::MAX_ENTRY_SIZE (255) will be array max capacity
     bool ProcessBatchProtocol(ItemData& data, RE::LEVELED_OBJECT& originalObject, std::size_t& insertBufferElements, SmallerLeveledObject* insertBuffer, bool& keepOriginal, std::vector<ItemData*>& resetVector);
@@ -87,9 +86,15 @@ public:
     //boost::unordered_flat_map<RE::FormID, std::pair<RE::TESLevItem*, std::vector<OutfitItemData>>> itemOutfitMap;
     boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemOutfitMap;
 
+    // ----- OUTFIT KEYWORD MAP -----
+    //boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemOutfitKeywordMap;
+
     // ----- CONTAINER MAP -----
     //boost::unordered_flat_map<RE::FormID, std::pair<ContainerGenerateData, std::vector<ContainerDirectItemData>>> itemContainerMap;
     boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemContainerMapLite;
+
+    // ----- CONTAINER KEYWORD MAP -----
+    //boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemContainerKeywordMap;
 
     // ----- CIRCULAR MAP -----
     // key should not be inserted into lists in value vector

@@ -1162,8 +1162,16 @@ bool Manager::InsertIntoOutfitMap(ItemData& data)
         );
 
         iterator->second.insertVector.emplace_back(data);
-        iterator->second.targetForm = data.targetForm;
-        iterator->second.targetFormType = data.targetFormType;
+        
+        if (wasInserted)
+        {
+            iterator->second.targetForm = data.targetForm;
+            iterator->second.targetFormType = data.targetFormType;
+
+            ++totalTargetSize;
+        }
+
+        ++totalDataSize;
 
         Utility::SetGeneratedLeveledListInstruction(iterator->second.instruction, data.useAll);
 
@@ -1462,6 +1470,7 @@ bool Manager::ProcessBatchContainerLite()
     uint32_t numContainerObjects;
 
     bool containerModified;
+    //bool keywordSearching = !itemContainerKeywordMap.empty();
 
     for (size_t i = 0; i < containerListSize; ++i)
     {
@@ -1667,6 +1676,16 @@ bool Manager::InsertIntoContainerGenerateMapLite(ItemData& data)
         );
 
         iterator->second.insertVector.emplace_back(data);
+        
+        if (wasInserted)
+        {
+            iterator->second.targetForm = data.targetForm;
+            iterator->second.targetFormType = data.targetFormType;
+
+            ++totalTargetSize;
+        }
+
+        ++totalDataSize;
 
         Utility::SetGeneratedLeveledListInstruction(iterator->second.instruction, data.useAll);
 
@@ -1681,7 +1700,7 @@ bool Manager::GenerateContainerLeveledListsLite()
 {
     for (auto& [targetKey, pairValue] : itemContainerMapLite)
     {
-        pairValue.generatedLeveledList = Utility::GenerateLeveledList(pairValue, totalGeneratedLeveledListTargetReinserts);
+        pairValue.generatedLeveledList = Utility::GenerateLeveledList<RE::TESLevItem*>(pairValue, totalGeneratedLeveledListTargetReinserts);
 
         if (pairValue.generatedLeveledList)
         {
@@ -1726,6 +1745,8 @@ template<typename T> bool Manager::InsertIntoGeneratedBatchMap(ItemData& data, b
     );
 
     iterator->second.insertVector.emplace_back(data);
+    iterator->second.targetForm = data.targetForm;
+    iterator->second.targetFormType = data.targetFormType;
 
     Utility::SetGeneratedLeveledListInstruction(iterator->second.instruction, data.useAll);
 
@@ -1845,6 +1866,12 @@ bool Manager::PushGeneratedLeveledLists()
     PushGeneratedLeveledList<RE::TESLevItem*>(itemLeveledListGenerateKeywordMap);
     PushGeneratedLeveledList<RE::TESLevCharacter*>(npcLeveledListGenerateKeywordMap);
     PushGeneratedLeveledList<RE::TESLevSpell*>(spellLeveledListGenerateKeywordMap);
+
+    PushGeneratedLeveledList<RE::TESLevItem*>(itemOutfitMap);
+    //PushGeneratedLeveledList<RE::TESLevItem*>(itemOutfitKeywordMap);
+
+    PushGeneratedLeveledList<RE::TESLevItem*>(itemContainerMapLite);
+    //PushGeneratedLeveledList<RE::TESLevItem*>(itemContainerKeywordMap);
     
     return true;
 }
