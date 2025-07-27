@@ -613,6 +613,12 @@ bool Manager::DirectProtocol(ItemData& data)
         {
             return InsertIntoContainerGenerateMapLite(data);
         }
+        else if ((protocol >= Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_MIN) && (protocol <= Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_MAX))
+        {
+            data.processCounter = Data::MAX_ENTRY_SIZE;
+            // recursive
+            return HandleCombinedProtocol(data);
+        }
 
     } // maybe allow keyword formtype through to remove any items with those keywords from all leveled lists?
     else if((data.targetFormType >= Data::ITEM_FORM_TYPE) && (data.targetFormType <= Data::LEVELED_SPELL_FORM_TYPE)) // form types are not compatible, exclude keyword formtype
@@ -1892,6 +1898,39 @@ template<typename T> bool Manager::PushGeneratedLeveledList(boost::unordered_fla
 template bool Manager::PushGeneratedLeveledList<RE::TESLevItem*>(boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>>& map);
 template bool Manager::PushGeneratedLeveledList<RE::TESLevCharacter*>(boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevCharacter*>>& map);
 template bool Manager::PushGeneratedLeveledList<RE::TESLevSpell*>(boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevSpell*>>& map);
+
+bool Manager::HandleCombinedProtocol(ItemData& data)
+{
+    bool insertList = data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_LIST_OUTFIT_CONTAINER ||
+                      data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_LIST_OUTFIT ||
+                      data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_LIST_CONTAINER;
+
+    bool insertOutfit = data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_LIST_OUTFIT_CONTAINER ||
+                        data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_LIST_OUTFIT ||
+                        data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_OUTFIT_CONTAINER;
+
+    bool insertContainer = data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_LIST_OUTFIT_CONTAINER ||
+                           data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_LIST_CONTAINER ||
+                           data.protocol == Data::VALID_MULTI_PROTOCOL_COMBINED_GENERATE_SWAP_OUTFIT_CONTAINER;
+
+    if (insertList)
+    {
+        data.protocol = Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_BASIC;
+        DirectProtocol(data);
+    }
+    if (insertOutfit)
+    {
+        data.protocol = Data::VALID_MULTI_PROTOCOL_OUTFIT_SWAP_BASIC;
+        DirectProtocol(data);
+    }
+    if (insertContainer)
+    {
+        data.protocol = Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_BASIC;
+        DirectProtocol(data);
+    }
+
+    return insertList || insertOutfit || insertContainer;
+}
 
 template<typename T> bool Manager::SafeCircularInsertionWrapper(const T* insert, const T* list)
 {

@@ -64,6 +64,8 @@ public:
     bool PushGeneratedLeveledLists();
     template<typename T> bool PushGeneratedLeveledList(boost::unordered_flat_map<RE::FormID, GenerateCollection<T>>& map);
 
+    bool HandleCombinedProtocol(ItemData& data);
+
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
     boost::unordered_flat_map<RE::FormID, std::vector<ItemData>> itemMap;
