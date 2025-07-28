@@ -14,4 +14,20 @@ public:
     std::uint8_t processCounter;
     std::int8_t targetFormType;
     std::int8_t insertFormType;
+
+    void CopyItemData(const ItemData& other)
+    {
+        targetForm = other.targetForm;
+        insertForm = other.insertForm;
+        chance = other.chance;
+        minCount = other.minCount;
+        maxCount = other.maxCount;
+        minLevel = other.minLevel;
+        maxLevel = other.maxLevel;
+        protocol = other.protocol;
+        useAll = other.useAll;
+        processCounter = other.processCounter;
+        targetFormType = other.targetFormType;
+        insertFormType = other.insertFormType;
+    }
 };

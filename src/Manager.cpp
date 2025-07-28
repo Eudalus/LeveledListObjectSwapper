@@ -1468,15 +1468,14 @@ bool Manager::ProcessBatchContainer()
 }
 */
 
-bool Manager::ProcessBatchContainerLite()
+template<typename T> bool Manager::ProcessBatchContainerLite()
 {
-    auto& containerList = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectCONT>();
+    auto& containerList = RE::TESDataHandler::GetSingleton()->GetFormArray<std::remove_pointer_t<T>>();
     size_t containerListSize = containerList.size();
 
     uint32_t numContainerObjects;
 
     bool containerModified;
-    //bool keywordSearching = !itemContainerKeywordMap.empty();
 
     for (size_t i = 0; i < containerListSize; ++i)
     {
@@ -1510,9 +1509,12 @@ bool Manager::ProcessBatchContainerLite()
             }
         }
     }
-
+   
     return false;
 }
+
+template bool Manager::ProcessBatchContainerLite<RE::TESObjectCONT>();
+template bool Manager::ProcessBatchContainerLite<RE::TESNPC>();
 
 /*
 bool Manager::ProcessContainerBatchProtocol(ContainerDirectItemData& data, RE::ContainerObject* originalObject, std::vector<SmallerContainerObject>& insertBuffer, bool& keepOriginal, std::vector<ContainerDirectItemData*>& resetVector)
@@ -1916,16 +1918,19 @@ bool Manager::HandleCombinedProtocol(ItemData& data)
     if (insertList)
     {
         data.protocol = Data::VALID_MULTI_PROTOCOL_SWAP_GENERATE_BASIC;
+
         DirectProtocol(data);
     }
     if (insertOutfit)
     {
         data.protocol = Data::VALID_MULTI_PROTOCOL_OUTFIT_SWAP_BASIC;
+
         DirectProtocol(data);
     }
     if (insertContainer)
     {
         data.protocol = Data::VALID_MULTI_PROTOCOL_CONTAINER_SWAP_BASIC;
+
         DirectProtocol(data);
     }
 

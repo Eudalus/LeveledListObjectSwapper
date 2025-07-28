@@ -24,7 +24,7 @@ public:
     template<typename T> bool ProcessFocusLeveledList(const RE::FormType& formType, boost::unordered_flat_map<RE::FormID, std::pair<std::vector<ItemData>, boost::unordered_flat_map<RE::FormID, std::vector<SmallerItemData>>>>& map);
     bool ProcessBatchOutfit();
     //bool ProcessBatchContainer();
-    bool ProcessBatchContainerLite();
+    template<typename T> bool ProcessBatchContainerLite();
 
     bool DirectProtocol(ItemData& data);
     bool InsertIntoBatchMap(ItemData& data); // calls InsertIntoCommonMap
@@ -99,8 +99,8 @@ public:
     //boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemContainerKeywordMap;
 
     // ----- CIRCULAR MAP -----
-    // key should not be inserted into lists in value vector
-    boost::unordered_flat_map<RE::FormID, std::vector<RE::FormID>> circularExclusionMap;
+    // key is a leveled list nested inside value set
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<RE::FormID>> circularExclusionMap;
 
     // ----- LEVELED LIST GENERATE BATCH MAPS -----
     boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemLeveledListGenerateBatchMap;

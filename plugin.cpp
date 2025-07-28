@@ -166,7 +166,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             if (!manager.itemContainerMapLite.empty())
             {
                 manager.GenerateContainerLeveledListsLite();
-                manager.ProcessBatchContainerLite();
+                manager.ProcessBatchContainerLite<RE::TESObjectCONT>(); // non-reference containers
+                manager.ProcessBatchContainerLite<RE::TESNPC>(); // NPC_, non-reference npcs
             }
 
             manager.PushGeneratedLeveledLists();
