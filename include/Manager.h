@@ -69,7 +69,7 @@ public:
     bool HandleCombinedProtocol(ItemData& data);
 
     bool PopulateExcludeMaps();
-    template<typename T> bool PopulateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& excludeMap, std::vector<T>& generatedMaps, const RE::FormType& formType);
+    template<typename T> bool PopulateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap, std::vector<T>& generatedMaps, const RE::FormType& formType);
 
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
@@ -104,10 +104,15 @@ public:
     //boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemContainerKeywordMap;
 
     // ----- CIRCULAR MAP -----
-    // key is a leveled list nested inside value set
-    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>> itemCircularExcludeMap;
-    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>> npcCircularExcludeMap;
-    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>> spellCircularExcludeMap;
+    // key is a leveled list recursively nested inside parent value set
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>> itemUpwardCircularExcludeMap;
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>> npcUpwardCircularExcludeMap;
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>> spellUpwardCircularExcludeMap;
+
+    // key is a parent leveled list that recursively contains nested leveled list value set
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>> itemDownwardCircularExcludeMap;
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>> npcDownwardCircularExcludeMap;
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>> spellDownwardCircularExcludeMap;
 
     // ----- LEVELED LIST GENERATE BATCH MAPS -----
     boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemLeveledListGenerateBatchMap;

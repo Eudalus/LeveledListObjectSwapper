@@ -6,24 +6,24 @@ template <typename T>
 class ExcludeCollection
 {
 	public:
-	RE::FormID parentFormID{};
-	T parentPointer{};
+	RE::FormID excludeFormID{};
+	T excludePointer{};
 
 	ExcludeCollection(const ExcludeCollection& other)
 	{
-		parentFormID = other.parentFormID;
-		parentPointer = other.parentPointer;
+		excludeFormID = other.excludeFormID;
+		excludePointer = other.excludePointer;
 	}
 
 	ExcludeCollection(const RE::FormID formID, const T pointer)
 	{
-		parentFormID = formID;
-		parentPointer = pointer;
+		excludeFormID = formID;
+		excludePointer = pointer;
 	}
 
 	bool operator==(const ExcludeCollection& other) const
 	{
-		return parentFormID == other.parentFormID;
+		return excludeFormID == other.excludeFormID;
 	}
 };
 
@@ -34,7 +34,19 @@ namespace boost
 	{
 		std::size_t operator()(const ExcludeCollection<T>& obj) const
 		{
-			return obj.parentFormID;
+			return obj.excludeFormID;
+		}
+	};
+}
+
+namespace std
+{
+	template<typename T>
+	struct hash<ExcludeCollection<T>>
+	{
+		std::size_t operator()(const ExcludeCollection<T>& obj) const
+		{
+			return obj.excludeFormID;
 		}
 	};
 }
