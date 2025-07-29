@@ -602,7 +602,7 @@ template RE::TESLevItem* Utility::GenerateLeveledList<RE::TESLevItem*>(const RE:
 template RE::TESLevCharacter* Utility::GenerateLeveledList<RE::TESLevCharacter*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData, size_t& targetReinsertCounter);
 template RE::TESLevSpell* Utility::GenerateLeveledList<RE::TESLevSpell*>(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData, size_t& targetReinsertCounter);
 
-template<typename T> T Utility::GenerateLeveledList(GenerateCollection<T>& collection, size_t& targetReinsertCounter)
+template<typename T> T Utility::GenerateLeveledList(GenerateCollection<T>& collection, std::vector<T>& pushBackList, size_t& targetReinsertCounter)
 {
     T value{}; // nullptr or default initialized
 
@@ -624,6 +624,8 @@ template<typename T> T Utility::GenerateLeveledList(GenerateCollection<T>& colle
     {
         return value;
     }
+
+    pushBackList.emplace_back(value);
 
     uint8_t size;
     uint8_t numberOfInsertData;
@@ -717,6 +719,6 @@ template<typename T> T Utility::GenerateLeveledList(GenerateCollection<T>& colle
 }
 
 // necessary signatures for the linker
-template RE::TESLevItem* Utility::GenerateLeveledList<RE::TESLevItem*>(GenerateCollection<RE::TESLevItem*>& collection, size_t& targetReinsertCounter);
-template RE::TESLevCharacter* Utility::GenerateLeveledList<RE::TESLevCharacter*>(GenerateCollection<RE::TESLevCharacter*>& collection, size_t& targetReinsertCounter);
-template RE::TESLevSpell* Utility::GenerateLeveledList<RE::TESLevSpell*>(GenerateCollection<RE::TESLevSpell*>& collection, size_t& targetReinsertCounter);
+template RE::TESLevItem* Utility::GenerateLeveledList<RE::TESLevItem*>(GenerateCollection<RE::TESLevItem*>& collection, std::vector<RE::TESLevItem*>& pushBackList, size_t& targetReinsertCounter);
+template RE::TESLevCharacter* Utility::GenerateLeveledList<RE::TESLevCharacter*>(GenerateCollection<RE::TESLevCharacter*>& collection, std::vector<RE::TESLevCharacter*>& pushBackList, size_t& targetReinsertCounter);
+template RE::TESLevSpell* Utility::GenerateLeveledList<RE::TESLevSpell*>(GenerateCollection<RE::TESLevSpell*>& collection, std::vector<RE::TESLevSpell*>& pushBackList, size_t& targetReinsertCounter);

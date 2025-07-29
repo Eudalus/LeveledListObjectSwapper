@@ -77,7 +77,7 @@ public:
 
     template<typename T> static T GenerateLeveledList(const RE::FormType& formType, std::vector<ContainerGenerateItemData>& list, const GeneratedLeveledListInstruction& instruction, const ItemData& targetItemData, size_t& targetReinsertCounter);
 
-    template<typename T> static T GenerateLeveledList(GenerateCollection<T>& collection, size_t& targetReinsertCounter);
+    template<typename T> static T GenerateLeveledList(GenerateCollection<T>& collection, std::vector<T>& pushBackList, size_t& targetReinsertCounter);
 
     template<typename T> static bool SetGeneratedLeveledListInstruction(GeneratedLeveledListInstruction& instruction, const T& modifier)
     {

@@ -12,6 +12,7 @@
 #include "SmallerContainerObject.h"
 #include "GeneratedLeveledListInstruction.h"
 #include "GenerateCollection.h"
+#include "ExcludeCollection.h"
 
 namespace logger = SKSE::log;
 
@@ -56,15 +57,19 @@ public:
     bool InsertGeneratedBatchMap(ItemData& data);
 
     template<typename T> bool InsertIntoGeneratedBatchMap(ItemData& data, boost::unordered_flat_map<RE::FormID, GenerateCollection<T>>& map);
-    template<typename T> bool GenerateBatchMapLeveledList(boost::unordered_flat_map<RE::FormID, GenerateCollection<T>>& map);
+    template<typename T> bool GenerateBatchMapLeveledList(boost::unordered_flat_map<RE::FormID, GenerateCollection<T>>& map, std::vector<T>& pushBackList);
 
     bool insertGeneratedKeywordMap(ItemData& data);
 
     // add generated leveled lists to DataHandler
     bool PushGeneratedLeveledLists();
     template<typename T> bool PushGeneratedLeveledList(boost::unordered_flat_map<RE::FormID, GenerateCollection<T>>& map);
+    template<typename T> bool PushGeneratedLeveledList(std::vector<T>& list);
 
     bool HandleCombinedProtocol(ItemData& data);
+
+    bool PopulateExcludeMaps();
+    template<typename T> bool PopulateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& excludeMap, std::vector<T>& generatedMaps, const RE::FormType& formType);
 
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol
@@ -100,7 +105,9 @@ public:
 
     // ----- CIRCULAR MAP -----
     // key is a leveled list nested inside value set
-    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<RE::FormID>> circularExclusionMap;
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>> itemCircularExcludeMap;
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>> npcCircularExcludeMap;
+    boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>> spellCircularExcludeMap;
 
     // ----- LEVELED LIST GENERATE BATCH MAPS -----
     boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemLeveledListGenerateBatchMap;
@@ -111,6 +118,10 @@ public:
     boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevItem*>> itemLeveledListGenerateKeywordMap;
     boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevCharacter*>> npcLeveledListGenerateKeywordMap;
     boost::unordered_flat_map<RE::FormID, GenerateCollection<RE::TESLevSpell*>> spellLeveledListGenerateKeywordMap;
+
+    std::vector<RE::TESLevItem*> itemLeveledListGeneratedPushBackVector;
+    std::vector<RE::TESLevCharacter*> npcLeveledListGeneratedPushBackVector;
+    std::vector<RE::TESLevSpell*> spellLeveledListGeneratedPushBackVector;
 
     std::default_random_engine randomEngine;
 
@@ -158,6 +169,9 @@ public:
     // Protocol=170
     // UseAll=8
     size_t totalGeneratedLeveledListTargetReinserts = 0;
+
+    // number of times insertions were skipped due to circular leveled list connection
+    size_t totalCircularInsertionSkips = 0;
 
 private:
     template<typename T> bool SafeCircularInsertion(const T* insert, const T* list, const T* entryList);

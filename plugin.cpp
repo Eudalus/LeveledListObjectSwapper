@@ -109,6 +109,10 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             // seed random number generator used for modification chance
             manager.randomEngine.seed(std::random_device()()); // for real
 
+            // move generate functions here
+
+            // move evaluator functions here
+
             // ----- FOCUS FUNCTIONS -----
             if (!manager.itemLeveledHybridMap.empty())
             {
@@ -124,14 +128,14 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
             }
 
             // ----- GENERATED LEVELED LIST BATCH FUNCTIONS -----
-            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(manager.itemLeveledListGenerateBatchMap);
-            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(manager.npcLeveledListGenerateBatchMap);
-            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(manager.spellLeveledListGenerateBatchMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(manager.itemLeveledListGenerateBatchMap, manager.itemLeveledListGeneratedPushBackVector);
+            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(manager.npcLeveledListGenerateBatchMap, manager.npcLeveledListGeneratedPushBackVector);
+            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(manager.spellLeveledListGenerateBatchMap, manager.spellLeveledListGeneratedPushBackVector);
 
             // ----- GENERATED LEVELED LIST KEYWORD FUNCTIONS -----
-            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(manager.itemLeveledListGenerateKeywordMap);
-            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(manager.npcLeveledListGenerateKeywordMap);
-            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(manager.spellLeveledListGenerateKeywordMap);
+            manager.GenerateBatchMapLeveledList<RE::TESLevItem*>(manager.itemLeveledListGenerateKeywordMap, manager.itemLeveledListGeneratedPushBackVector);
+            manager.GenerateBatchMapLeveledList<RE::TESLevCharacter*>(manager.npcLeveledListGenerateKeywordMap, manager.npcLeveledListGeneratedPushBackVector);
+            manager.GenerateBatchMapLeveledList<RE::TESLevSpell*>(manager.spellLeveledListGenerateKeywordMap, manager.spellLeveledListGeneratedPushBackVector);
 
             // ----- BATCH FUNCTIONS -----
             if (!manager.itemMap.empty() || !manager.itemKeywordMap.empty())
