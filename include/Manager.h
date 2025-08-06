@@ -69,7 +69,9 @@ public:
     bool HandleCombinedProtocol(ItemData& data);
 
     bool PopulateExcludeMaps();
-    template<typename T> bool PopulateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap, std::vector<T>& generatedMaps, const RE::FormType& formType);
+    template<typename T> bool PopulateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap, std::vector<T>& generatedLists, const RE::FormType& formType);
+    template<typename T, typename U> bool PushToExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap, U& pushList, const RE::FormType& formType);
+    template<typename T> bool PropagateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap);
 
     // ----- BATCH MAPS -----
     // batch inserts with item targets, may contain leveled lists targets based on item data protocol

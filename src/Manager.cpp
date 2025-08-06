@@ -1973,21 +1973,36 @@ bool Manager::PopulateExcludeMaps()
     PopulateExcludeMap<RE::TESLevSpell*>(spellUpwardCircularExcludeMap, spellDownwardCircularExcludeMap, spellLeveledListGeneratedPushBackVector, RE::FormType::LeveledSpell);
 }
 
-template<typename T> bool Manager::PopulateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap, std::vector<T>& generatedMaps, const RE::FormType& formType)
+template<typename T> bool Manager::PopulateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap, std::vector<T>& generatedLists, const RE::FormType& formType)
 {
     // BSTArray<TESLevItem*>, BSTArray<TESLevCharacter*>, BSTArray<TESLevSpell*>
     auto& leveledItemLists = RE::TESDataHandler::GetSingleton()->GetFormArray<std::remove_pointer_t<T>>();
 
-    // using size_type = uint32_t
-    const RE::BSTArrayBase::size_type leveledItemListsSize = leveledItemLists.size();
-    const size_t generatedMapsSize = generatedMaps.size();
-
     // handle original leveled lists
-    for (size_t i = 0; i < leveledItemListsSize; ++i)
+    PushToExcludeMap(upwardExcludeMap, downwardExcludeMap, leveledItemLists, formType);
+
+    // handle generated leveled lists
+    PushToExcludeMap(upwardExcludeMap, downwardExcludeMap, generatedLists, formType);
+
+    PropagateExcludeMap(upwardExcludeMap, downwardExcludeMap);
+
+    return true;
+}
+
+// necessary signatures for the linker
+template bool Manager::PopulateExcludeMap<RE::TESLevItem*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& downwardExcludeMap, std::vector<RE::TESLevItem*>& generatedLists, const RE::FormType& formType);
+template bool Manager::PopulateExcludeMap<RE::TESLevCharacter*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& downwardExcludeMap, std::vector<RE::TESLevCharacter*>& generatedLists, const RE::FormType& formType);
+template bool Manager::PopulateExcludeMap<RE::TESLevSpell*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& downwardExcludeMap, std::vector<RE::TESLevSpell*>& generatedLists, const RE::FormType& formType);
+
+template<typename T, typename U> bool Manager::PushToExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap, U& pushList, const RE::FormType& formType)
+{
+    const size_t pushListSize = pushList.size();
+
+    for (size_t i = 0; i < pushListSize; ++i)
     {
-        if (leveledItemLists[i])
+        if (pushList[i])
         {
-            RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = leveledItemLists[i]->entries;
+            RE::SimpleArray<RE::LEVELED_OBJECT>& currentEntries = pushList[i]->entries;
             const size_t currentEntriesSize = std::min(currentEntries.size(), Data::MAX_ENTRY_SIZE);
 
             for (size_t k = 0; k < currentEntriesSize; ++k)
@@ -2006,14 +2021,14 @@ template<typename T> bool Manager::PopulateExcludeMap(boost::unordered_flat_map<
                                                                             );
 
                     auto [upwardSetIterator, insertIntoUpwardSet] = upwardMapIterator->second.emplace(
-                                                                                    leveledItemLists[i]->formID, 
-                                                                                    static_cast<T>(leveledItemLists[i])
+                                                                                    pushList[i]->formID, 
+                                                                                    static_cast<T>(pushList[i])
                                                                                     );
 
                     // downward map key is parent leveled list, value is set of nested leveled lists
                     auto [downwardMapIterator, insertIntoDownwardMap] = downwardExcludeMap.emplace(
                                                                                     std::piecewise_construct, 
-                                                                                    std::forward_as_tuple(leveledItemLists[i]->formID), // RE::FormID key
+                                                                                    std::forward_as_tuple(pushList[i]->formID), // RE::FormID key
                                                                                     std::forward_as_tuple() // boost::unordered_flat_set<ExcludeCollection<T>> value
                                                                                     );
 
@@ -2021,22 +2036,33 @@ template<typename T> bool Manager::PopulateExcludeMap(boost::unordered_flat_map<
                                                                                     currentForm->formID, 
                                                                                     static_cast<T>(currentForm)
                                                                                     );
-
-                    // TODO: create propagate function
                 }
             }
         }
     }
 
-    // handle generated leveled lists
+    return true;
+}
+
+// necessary signatures for the linker
+template bool Manager::PushToExcludeMap<RE::TESLevItem*, RE::BSTArray<RE::TESLevItem*>>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& downwardExcludeMap, RE::BSTArray<RE::TESLevItem*>& pushList, const RE::FormType& formType);
+template bool Manager::PushToExcludeMap<RE::TESLevCharacter*, RE::BSTArray<RE::TESLevCharacter*>>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& downwardExcludeMap, RE::BSTArray<RE::TESLevCharacter*>& pushList, const RE::FormType& formType);
+template bool Manager::PushToExcludeMap<RE::TESLevSpell*, RE::BSTArray<RE::TESLevSpell*>>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& downwardExcludeMap, RE::BSTArray<RE::TESLevSpell*>& pushList, const RE::FormType& formType);
+
+template bool Manager::PushToExcludeMap<RE::TESLevItem*, std::vector<RE::TESLevItem*>>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& downwardExcludeMap, std::vector<RE::TESLevItem*>& pushList, const RE::FormType& formType);
+template bool Manager::PushToExcludeMap<RE::TESLevCharacter*, std::vector<RE::TESLevCharacter*>>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& downwardExcludeMap, std::vector<RE::TESLevCharacter*>& pushList, const RE::FormType& formType);
+template bool Manager::PushToExcludeMap<RE::TESLevSpell*, std::vector<RE::TESLevSpell*>>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& downwardExcludeMap, std::vector<RE::TESLevSpell*>& pushList, const RE::FormType& formType);
+
+template<typename T> bool Manager::PropagateExcludeMap(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<T>>>& downwardExcludeMap)
+{
 
     return true;
 }
 
 // necessary signatures for the linker
-template bool Manager::PopulateExcludeMap<RE::TESLevItem*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& downwardExcludeMap, std::vector<RE::TESLevItem*>& generatedMaps, const RE::FormType& formType);
-template bool Manager::PopulateExcludeMap<RE::TESLevCharacter*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& downwardExcludeMap, std::vector<RE::TESLevCharacter*>& generatedMaps, const RE::FormType& formType);
-template bool Manager::PopulateExcludeMap<RE::TESLevSpell*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& downwardExcludeMap, std::vector<RE::TESLevSpell*>& generatedMaps, const RE::FormType& formType);
+template bool Manager::PropagateExcludeMap<RE::TESLevItem*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevItem*>>>& downwardExcludeMap);
+template bool Manager::PropagateExcludeMap<RE::TESLevCharacter*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevCharacter*>>>& downwardExcludeMap);
+template bool Manager::PropagateExcludeMap<RE::TESLevSpell*>(boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& upwardExcludeMap, boost::unordered_flat_map<RE::FormID, boost::unordered_flat_set<ExcludeCollection<RE::TESLevSpell*>>>& downwardExcludeMap);
 
 template<typename T> bool Manager::SafeCircularInsertionWrapper(const T* insert, const T* list)
 {
